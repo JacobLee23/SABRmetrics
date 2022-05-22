@@ -1,0 +1,21 @@
+{
+  "Baseball HQ": ["BaseballHQID"],
+  "Baseball Prospectus": ["BaseballProspectusID"],
+  "CBS": ["CBSID", "CBSName"],
+  "Clay Davenport": ["ClayDavenportID"],
+  "Draft Kings": ["DraftKingsName"],
+  "ESPN": ["ESPNID", "ESPNName"],
+  "Fanduel": ["FanDuelID", "FanDuelName"],
+  "FanGraphs": ["FanGraphsID", "FanGraphsName"],
+  "Fantasy Pros": ["FantasyProsName"],
+  "Fantrax": ["FantraxName"],
+  "KFFL": ["KFFLName"],
+  "Masterball": ["MasterballName"],
+  "MLB": ["MLBID", "MLBName"],
+  "NFBC": ["NFBCID", "NFBCName", "NFBCLastFirstName"],
+  "Ottoneu": ["OttoneuID"],
+  "Razzball": ["RazzballName"],
+  "Retrosheet": ["RetrosheetID"],
+  "RotoWire": ["RotoWireID", "RotoWireName"],
+  "Yahoo": ["YahooID", "YahooName"]
+}

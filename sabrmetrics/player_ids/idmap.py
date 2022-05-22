@@ -206,7 +206,8 @@ class IDMap:
 
         return df_
 
-    def _format_idmap_df(self, df_: pd.DataFrame) -> pd.DataFrame:
+    @classmethod
+    def _format_idmap_df(cls, df_: pd.DataFrame) -> pd.DataFrame:
         """
 
         """
@@ -227,7 +228,7 @@ class IDMap:
         df_.loc[:, "Active"] = df_.loc[:, "Active"].apply(
             _DFReformat.IDMapReformat.reformat_active
         )
-        df_.loc[:, self._integer_columns] = df_.loc[:, self._integer_columns].applymap(
+        df_.loc[:, cls._integer_columns] = df_.loc[:, cls._integer_columns].applymap(
             lambda x: 0 if math.isnan(float(x)) else int(x)
         )
 
@@ -247,7 +248,8 @@ class IDMap:
 
         return df_
 
-    def _format_changelog_df(self, df_: pd.DataFrame) -> pd.DataFrame:
+    @classmethod
+    def _format_changelog_df(cls, df_: pd.DataFrame) -> pd.DataFrame:
         """
 
         """

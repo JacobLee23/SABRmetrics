@@ -29,6 +29,17 @@ class PlayerIndex:
 
         self._soup = get_soup(self.url)
 
+    class _Player(typing.NamedTuple):
+        """
+
+        """
+        name: str
+        years: tuple[int]
+        active: bool
+        hof: bool
+
+        href: str
+
     @property
     def base_address(self) -> str:
         """
@@ -67,3 +78,20 @@ class PlayerIndex:
         elem = container.select_one("h2")
 
         return int(re.search(r"\d+", elem.text.strip()).group())
+
+    def players(self) -> typing.Generator[_Player, None, None]:
+        """
+
+        """
+        container = self.soup.select_one("div#div_players_")
+
+        for elem in container.select("p"):
+            name = elem.select_one("a").text
+            years = tuple(map(int, re.findall(r"\d{4}", elem.text)))
+            active = elem.select_one("b") is not None
+            hof = "+" in elem.text
+            href = _URLS.base_address + elem.select_one("a").attrs.get("href")
+
+            yield self._Player(
+                name=name, years=years, active=active, hof=hof, href=href
+            )

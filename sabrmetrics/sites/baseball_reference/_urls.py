@@ -11,7 +11,7 @@ class URLs:
         self._base_url = "https://www.baseball-reference.com/"
 
         # players
-        self._player_index = "players/{letter}"
+        self._player_index = "players/{letter}/"
         self._player = "players/{letter}/{id}.shtml"
 
     @property

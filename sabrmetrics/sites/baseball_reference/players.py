@@ -2,6 +2,7 @@
 
 """
 
+import datetime
 import re
 import string
 import typing
@@ -117,12 +118,8 @@ class Player:
 
         """
         name: str
-        position: str
-        bats: str
-        throws: str
-
-        height: tuple[int, int]
-
+        src: str
+        content: str
 
     class _Jersey(typing.NamedTuple):
         """
@@ -167,10 +164,19 @@ class Player:
         """
         return self._soup
 
-    def meta(self):
+    def meta(self) -> _Meta:
         """
 
         """
+        container = self.soup.select_one("div#info > div#meta")
+
+        name = container.select_one("div > h1 > span").text.strip()
+        src = container.select_one("div.media-item.multiple > img").attrs.get("src")
+        content = "\n".join(
+            " ".join(e.text.strip().split()) for e in container.select("div > p")
+        )
+
+        return self._Meta(name=name, src=src, content=content)
 
     def accolades(self) -> typing.Optional[typing.Tuple[str]]:
         """

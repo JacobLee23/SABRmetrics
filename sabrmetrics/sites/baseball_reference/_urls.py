@@ -13,7 +13,7 @@ class URLs:
 
         # players
         self._player_index = "players/{letter}/"
-        self._player = "players/{letter}/{id}.shtml"
+        self._player = "players/{letter}/{player_id}.shtml"
 
     @property
     def base_address(self) -> str:

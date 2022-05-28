@@ -14,6 +14,7 @@ class URLs:
         # players
         self._player_index = "players/{letter}/"
         self._player = "players/{letter}/{player_id}.shtml"
+        self._standard_batting = "players/{letter}/{player_id}.shtml#batting_standard"
 
     @property
     def base_address(self) -> str:
@@ -30,3 +31,7 @@ class URLs:
     @property
     def player(self) -> str:
         return self._base_url + self._player
+
+    @property
+    def standard_batting(self) -> str:
+        return self._base_url + self._standard_batting

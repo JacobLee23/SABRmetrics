@@ -1,0 +1,68 @@
+"""
+
+"""
+
+import string
+import urllib.request
+
+import pytest
+
+from sabrmetrics.sites.baseball_reference import _urls
+
+
+class TestURLs:
+    """
+
+    """
+    urls = _urls.URLs()
+
+    def test_base_address(self):
+        with urllib.request.urlopen(self.urls.base_address) as res:
+            assert res.getcode() == 200
+
+    def test_base_url(self):
+        with urllib.request.urlopen(self.urls.base_url) as res:
+            assert res.getcode() == 200
+
+    @pytest.mark.parametrize(
+        "letter", string.ascii_lowercase
+    )
+    def test_player_index(self, letter: str):
+        with urllib.request.urlopen(
+                self.urls.player_index.format(letter=letter)
+        ) as res:
+            assert res.getcode() == 200
+
+    @pytest.mark.parametrize(
+        "letter,player_id", [
+            # 'In the News' players (5/27/2022)
+            ("s", "scherma01"),         # Max Scherzer
+            ("a", "alonspe01"),         # Pete Alonso
+            ("d", "degroja01"),         # Jacob DeGrom
+            ("l", "lindofr01"),         # Francisco Lindor
+            ("j", "judgeaa01"),         # Aaron Judge
+            ("b", "bassich01"),         # Chris Bassit
+            ("m", "mcneije01"),         # Jeff McNeil
+            ("n", "nimmobr01"),         # Brandon Nimmo
+            ("m", "megilty01"),         # Tylor Megill
+            ("m", "martest01"),         # Starling Marte
+
+            # 'All-Time Greats' players (5/27/2022)
+            ("a", "aaronha01"),         # Henry Aaron
+            ("d", "dimagjo01"),         # Joe DiMaggio
+            ("s", "speaktr01"),         # Tris Speaker
+            ("f", "foxxji01"),          # Jimmie Foxx
+            ("c", "charlos99"),         # Oscar Charleston
+            ("m", "mayswi01"),          # Willie Mays
+            ("m", "mathech01"),         # Christy Mathewson
+            ("")
+
+            # 'Active Greats' players (5/27/2022)
+
+        ]
+    )
+    def test_player(self, letter: str, player_id: str):
+        with urllib.request.urlopen(
+                self.urls.player.format(letter=letter, player_id=player_id)
+        ) as res:
+            assert res.getcode() == 200

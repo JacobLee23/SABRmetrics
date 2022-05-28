@@ -12,6 +12,9 @@ from sabrmetrics.sites.baseball_reference import players
 from sabrmetrics.tests.test_sites import PLAYERS
 
 
+
+
+
 @pytest.mark.parametrize(
     "player_index", [players.PlayerIndex(x) for x in string.ascii_lowercase]
 )

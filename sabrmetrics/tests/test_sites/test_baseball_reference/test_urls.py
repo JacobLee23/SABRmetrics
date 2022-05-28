@@ -5,17 +5,13 @@
 import string
 import urllib.request
 
-import os
 import pytest
 
 from sabrmetrics.sites.baseball_reference import _urls
+from sabrmetrics.tests.test_sites import _PLAYERS_PATH
 
 
-with open(
-    os.path.join(
-        "sabrmetrics", "tests", "test_sites", "players.txt"
-    ), "r", encoding="utf-8"
-) as file:
+with open(_PLAYERS_PATH, "r", encoding="utf-8") as file:
     PLAYERS = file.read().split("\n")
 
 

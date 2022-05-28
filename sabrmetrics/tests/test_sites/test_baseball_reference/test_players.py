@@ -2,6 +2,7 @@
 
 """
 
+import datetime
 import re
 import string
 import urllib.request
@@ -10,9 +11,6 @@ import pytest
 
 from sabrmetrics.sites.baseball_reference import players
 from sabrmetrics.tests.test_sites import PLAYERS
-
-
-
 
 
 @pytest.mark.parametrize(
@@ -26,10 +24,9 @@ class TestPlayerIndex:
         """
 
         """
-        assert player_index.base_address
         assert [
                    x for _, x, _, _ in string.Formatter().parse(player_index.base_address) if x
-               ][0] == "letter"
+               ] == ["letter"]
 
     def test_letter(self, player_index: players.PlayerIndex):
         """
@@ -90,3 +87,108 @@ class TestPlayers:
     """
 
     """
+    def test_base_address(self, player: players.Player):
+        """
+
+        """
+        assert [
+                   x for _, x, _, _ in string.Formatter().parse(player.base_address) if x
+               ] == ["letter", "player_id"]
+
+    def test_player_id(self, player: players.Player):
+        """
+
+        """
+        assert player.player_id.islower() and player.player_id.isalnum()
+        assert re.search(r"^[a-z]{,7}[0-9]{,2}$", player.player_id) is not None
+
+    def test_letter(self, player: players.Player):
+        """
+
+        """
+        assert player.letter in string.ascii_lowercase
+        assert player.letter.islower()
+        assert player.letter == player.player_id[0]
+
+    def test_url(self, player: players.Player):
+        """
+
+        """
+        with urllib.request.urlopen(player.url) as res:
+            assert res.getcode() == 200
+
+    def test_soup(self, player: players.Player):
+        """
+
+        """
+        assert player.soup
+
+    def test_meta(self, player: players.Player):
+        """
+
+        """
+        assert len(player.soup.select("div#info > div#meta")) == 1
+        container = player.soup.select_one("div#info > div#meta")
+        assert len(container.select("div > h1 > span")) == 1
+        assert container.select_one("div > h1 > span").text
+        assert len(container.select("div.media-item.multiple > img")) >= 1
+        assert all(
+            e.attrs.get("src") is not None
+            for e in container.select("div.media-item.multiple > img")
+        )
+        assert container.select("div > p")
+        assert all(e.text for e in container.select("div > p"))
+
+        meta = player.meta()
+        assert all(meta._asdict().values())
+
+    def test_accolades(self, player: players.Player):
+        """
+
+        """
+
+    def test_jerseys(self, player: players.Player):
+        """
+
+        """
+        assert len(player.soup.select("div#info > div.uni_holder.br")) == 1
+        container = player.soup.select_one("div#info > div.uni_holder.br")
+        for elem in container.select("a.poptip"):
+            assert len(elem.select("svg > text")) == 1
+            assert elem.select_one("svg > text").text
+            assert elem.attrs.get("data-tip") is not None
+            assert re.search(r"^\d{4}-\d{4} (.*)$", elem.attrs.get("data-tip")) is not None
+            assert len(re.findall(r"\d{4}", elem.attrs.get("data-tip"))) == 2
+
+        jerseys = player.jerseys()
+        assert all(all(x._asdict().values()) for x in jerseys)
+
+    def stats_pullout(self, player: players.Player):
+        """
+
+        """
+        assert len(self.soup.select("div#info > div.stats-pullout")) == 1
+        container = self.soup.select_one("div#info > div.stats_pullout")
+        assert container.select("span.poptip > strong")
+        a = container.select("span.poptip > strong")
+        assert container.select("div:nth-child(1) > div > p > strong")
+        b = container.select("div:nth-child(1) > div > p > strong")
+        assert len(a) == len(b)
+        assert all(e.text for e in a)
+        assert all(e.text for e in b)
+
+        assert all(
+            len(container.select(x)) == 1
+            for x in ("div.p1 > div", "div.p2 > div", "div.p3 > div")
+        )
+        for elem in container.select("div.p1 > div, div.p2 > div, div.p3 > div"):
+            assert elem.select("p")
+            assert len(elem.select("p")) == len(a) == len(b)
+            assert all(e.text for e in elem.select("p"))
+
+        stats = player.stats_pullout()
+        assert len(stats.index) in (1, 2)
+        assert set(stats.index) in (
+            {"Career"},
+            {str(datetime.datetime.now().year), "Career"}
+        )

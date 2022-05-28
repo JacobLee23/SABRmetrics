@@ -118,7 +118,7 @@ class Player:
 
         """
         name: str
-        src: str
+        src: list[str]
         content: str
 
     class _Jersey(typing.NamedTuple):
@@ -155,7 +155,7 @@ class Player:
         """
 
         """
-        return _URLS.player.format(letter=self.letter, id=self.player_id)
+        return _URLS.player.format(letter=self.letter, player_id=self.player_id)
 
     @property
     def soup(self) -> bs4.BeautifulSoup:
@@ -171,7 +171,9 @@ class Player:
         container = self.soup.select_one("div#info > div#meta")
 
         name = container.select_one("div > h1 > span").text.strip()
-        src = container.select_one("div.media-item.multiple > img").attrs.get("src")
+        src = [
+            e.attrs.get("src") for e in container.select("div.media-item.multiple > img")
+        ]
         content = "\n".join(
             " ".join(e.text.strip().split()) for e in container.select("div > p")
         )
@@ -206,7 +208,7 @@ class Player:
             ).group(1)
             years = tuple(
                 map(int, re.findall(r"\d{4}", elem.attrs.get("data-tip")))
-            )[:2]
+            )
 
             res.append(
                 self._Jersey(number=number, team=team, years=years)
@@ -221,10 +223,10 @@ class Player:
         container = self.soup.select_one("div#info > div.stats_pullout")
         df_ = pd.DataFrame(
             columns=[
-                x.text.strip() for x in container.select("span.poptip > strong")
+                e.text.strip() for e in container.select("span.poptip > strong")
             ],
             index=[
-                x.text.strip() for x in container.select("div:nth-child(1) > div > p > strong")
+                e.text.strip() for e in container.select("div:nth-child(1) > div > p > strong")
             ]
         )
 

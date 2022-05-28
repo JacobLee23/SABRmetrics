@@ -7,10 +7,11 @@ import re
 import string
 import urllib.request
 
+import bs4
 import pytest
 
 from sabrmetrics.sites.baseball_reference import players
-from sabrmetrics.tests.test_sites import PLAYERS
+from sabrmetrics.tests.test_sites import BATTERS, PITCHERS, PLAYERS
 
 
 @pytest.mark.parametrize(
@@ -192,3 +193,38 @@ class TestPlayers:
             {"Career"},
             {str(datetime.datetime.now().year), "Career"}
         )
+
+
+@pytest.mark.parametrize(
+    "player", [players._StandardBatting(x) for x in BATTERS]
+)
+class TestStandardBatting:
+    """
+
+    """
+    def test_url(self, player: players._StandardBatting):
+        """
+
+        """
+        with urllib.request.urlopen(player.url) as res:
+            assert res.getcode() == 200
+
+    def test_soup(self, player: players._StandardBatting):
+        """
+
+        """
+        assert player.soup
+
+    def test_container(self, player: players._StandardBatting):
+        """
+
+        """
+        assert player.container
+
+    def test_table(self, player: players._StandardBatting):
+        """
+
+        """
+        table = player._table
+        assert all(table._asdict().values())
+        assert all(isinstance(x, bs4.Tag) for x in table._asdict().values())

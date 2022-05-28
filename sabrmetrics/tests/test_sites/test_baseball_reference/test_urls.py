@@ -5,9 +5,18 @@
 import string
 import urllib.request
 
+import os
 import pytest
 
 from sabrmetrics.sites.baseball_reference import _urls
+
+
+with open(
+    os.path.join(
+        "sabrmetrics", "tests", "test_sites", "players.txt"
+    ), "r", encoding="utf-8"
+) as file:
+    PLAYERS = file.read().split("\n")
 
 
 class TestURLs:
@@ -35,30 +44,7 @@ class TestURLs:
 
     @pytest.mark.parametrize(
         "letter,player_id", [
-            # 'In the News' players (5/27/2022)
-            ("s", "scherma01"),         # Max Scherzer
-            ("a", "alonspe01"),         # Pete Alonso
-            ("d", "degroja01"),         # Jacob DeGrom
-            ("l", "lindofr01"),         # Francisco Lindor
-            ("j", "judgeaa01"),         # Aaron Judge
-            ("b", "bassich01"),         # Chris Bassit
-            ("m", "mcneije01"),         # Jeff McNeil
-            ("n", "nimmobr01"),         # Brandon Nimmo
-            ("m", "megilty01"),         # Tylor Megill
-            ("m", "martest01"),         # Starling Marte
-
-            # 'All-Time Greats' players (5/27/2022)
-            ("a", "aaronha01"),         # Henry Aaron
-            ("d", "dimagjo01"),         # Joe DiMaggio
-            ("s", "speaktr01"),         # Tris Speaker
-            ("f", "foxxji01"),          # Jimmie Foxx
-            ("c", "charlos99"),         # Oscar Charleston
-            ("m", "mayswi01"),          # Willie Mays
-            ("m", "mathech01"),         # Christy Mathewson
-            ("")
-
-            # 'Active Greats' players (5/27/2022)
-
+            (x[0], x) for x in PLAYERS
         ]
     )
     def test_player(self, letter: str, player_id: str):

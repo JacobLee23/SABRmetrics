@@ -8,11 +8,7 @@ import urllib.request
 import pytest
 
 from sabrmetrics.sites.baseball_reference import _urls
-from sabrmetrics.tests.test_sites import _PLAYERS_PATH
-
-
-with open(_PLAYERS_PATH, "r", encoding="utf-8") as file:
-    PLAYERS = file.read().split("\n")
+from sabrmetrics.tests.test_sites import PLAYERS
 
 
 class TestURLs:

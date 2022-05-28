@@ -11,6 +11,9 @@ import pytest
 from sabrmetrics.sites.baseball_reference import players
 
 
+
+
+
 @pytest.mark.parametrize(
     "player_index", [players.PlayerIndex(x) for x in string.ascii_lowercase]
 )
@@ -77,3 +80,8 @@ class TestPlayerIndex:
             assert len(re.findall(r"\d{4}", elem.text)) == 2
             assert len(elem.select("b")) in (0, 1)
             assert elem.select_one("a").attrs.get("href") is not None
+
+
+@pytest.mark.parametrize(
+    "player", [players.Player(x) for x in ]
+)

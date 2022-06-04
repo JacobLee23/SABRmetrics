@@ -8,7 +8,7 @@ import urllib.request
 import pytest
 
 from sabrmetrics.sites.baseball_reference import _urls
-from sabrmetrics.tests.test_sites import PLAYERS
+from sabrmetrics.tests.test_sites.test_baseball_reference import PLAYERS
 
 
 class TestURLs:
@@ -35,12 +35,21 @@ class TestURLs:
             assert res.getcode() == 200
 
     @pytest.mark.parametrize(
-        "letter,player_id", [
-            (x[0], x) for x in PLAYERS
-        ]
+        "letter,player_id", [(x[0], x) for x in PLAYERS]
     )
     def test_player(self, letter: str, player_id: str):
         with urllib.request.urlopen(
                 self.urls.player.format(letter=letter, player_id=player_id)
         ) as res:
             assert res.getcode() == 200
+
+    @pytest.mark.parametrize(
+        "letter,player_id", [(x[0], x) for x in PLAYERS]
+    )
+    def test_standard_batting(self, letter: str, player_id: str):
+        with urllib.request.urlopen(
+                self.urls.standard_batting.format(letter=letter, player_id=player_id)
+        ) as res:
+            assert res.getcode() == 200
+
+

@@ -11,7 +11,7 @@ import bs4
 import pytest
 
 from sabrmetrics.sites.baseball_reference import players
-from sabrmetrics.tests.test_sites import BATTERS, PITCHERS, PLAYERS
+from sabrmetrics.tests.test_sites.test_baseball_reference import BATTERS, PITCHERS, PLAYERS
 
 
 @pytest.mark.parametrize(
@@ -82,7 +82,7 @@ class TestPlayerIndex:
 
 
 @pytest.mark.parametrize(
-    "player", [players.Player(x) for x in PLAYERS]
+    "overview", [players.Player(x) for x in PLAYERS]
 )
 class TestPlayers:
     """
@@ -196,35 +196,43 @@ class TestPlayers:
 
 
 @pytest.mark.parametrize(
-    "player", [players._StandardBatting(x) for x in BATTERS]
+    "overview", [players._BattingOverview(x) for x in BATTERS]
 )
-class TestStandardBatting:
+class TestOverview:
     """
 
     """
-    def test_url(self, player: players._StandardBatting):
+
+    def test_player_id(self, overview: players._BattingOverview):
         """
 
         """
-        with urllib.request.urlopen(player.url) as res:
+        assert overview.player_id.islower() and overview.player_id.isalnum()
+        assert re.search(r"^[a-z]{,7}[0-9]{,2}$", overview.player_id) is not None
+
+    def test_letter(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert overview.letter in string.ascii_lowercase
+        assert overview.letter.islower()
+        assert overview.letter == overview.player_id[0]
+
+    def test_url(self, overview: players._BattingOverview):
+        """
+
+        """
+        with urllib.request.urlopen(overview.url) as res:
             assert res.getcode() == 200
 
-    def test_soup(self, player: players._StandardBatting):
+    def test_tables(self, overview: players._BattingOverview):
         """
 
         """
-        assert player.soup
+        assert len(overview.tables) == 16
 
-    def test_container(self, player: players._StandardBatting):
+    def test_standard_batting(self, overview: players._BattingOverview):
         """
 
         """
-        assert player.container
-
-    def test_table(self, player: players._StandardBatting):
-        """
-
-        """
-        table = player._table
-        assert all(table._asdict().values())
-        assert all(isinstance(x, bs4.Tag) for x in table._asdict().values())
+        data = overview.standard_batting()

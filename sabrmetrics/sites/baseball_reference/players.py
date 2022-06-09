@@ -12,6 +12,7 @@ import bs4
 import numpy as np
 import pandas as pd
 from playwright.sync_api import sync_playwright
+import requests
 
 from . import _urls
 from .._scrape import get_soup
@@ -272,7 +273,19 @@ class _BattingOverview:
     """
 
     """
-    _standard_batting = "div#content > div#all_batting_standard"
+    _css = {
+        "Standard Batting": "div#all_batting_standard",
+        "Batting Value": "div#all_batting_value",
+        "Advanced Batting": "div#all_batting_advanced",
+        "Postseason Batting": "div#all_batting_postseason",
+        "Standard Fielding": "div#all_standard_fielding",
+        "Appearances": "div#all_appearances",
+        "Leaderboard": "div#all_leaderboard",
+        "Hall of Fame Statistics": "div#all_hof_other",
+        "Similarity Scores": "div#ss_other",
+        "Transactions": "div#all_transactions_other",
+        "Salaries": "div#all_br-salaries"
+    }
 
     def __init__(self, player_id: str):
         """
@@ -283,14 +296,8 @@ class _BattingOverview:
 
         self._url = Player.url_concat(self.letter, self.player_id)
 
-        with sync_playwright() as play:
-            browser = play.chromium.launch()
-            page = browser.new_page()
-
-            page.goto(self.url, timeout=0)
-            self._tables = pd.read_html(page.content())
-
-            browser.close()
+        self._response = requests.get(self.url)
+        self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
 
     class _StandardBatting(typing.NamedTuple):
         """
@@ -324,16 +331,24 @@ class _BattingOverview:
         return self._url
 
     @property
-    def tables(self) -> list[pd.DataFrame]:
+    def response(self) -> requests.Response:
         """
         :return:
         """
-        return self._tables
+        return self._response
 
-    def standard_batting(self, minors: bool = False) -> _StandardBatting:
+    @property
+    def soup(self) -> bs4.BeautifulSoup:
         """
         :return:
         """
+        return self._soup
+
+    """
+    def standard_batting(self, minors: bool = False) -> _StandardBatting:
+        \"""
+        :return:
+        \"""
         df_ = self.tables[]     # FIXME
 
         if not minors:
@@ -387,13 +402,13 @@ class _BattingOverview:
 
         career.drop(labels=["Pos", "Awards"], inplace=True)
         _add = {
-            "Yrs": int(re.search(r"\d+", career.iloc[0]).group())
+            "Yrs": int(re.search(r"\\d+", career.iloc[0]).group())
         }
         career = pd.concat([pd.Series(_add), career.iloc[4:]])
 
         season_average.drop(labels=["Pos", "Awards"], inplace=True)
         _add = {
-            "Gms": int(re.search(r"\d+", season_average.iloc[0]).group())
+            "Gms": int(re.search(r"\\d+", season_average.iloc[0]).group())
         }
         season_average = pd.concat([pd.Series(_add), career.iloc[4:]])
 
@@ -401,7 +416,7 @@ class _BattingOverview:
             teams.drop(columns=["Pos", "Awards"], inplace=True)
             _add = {
                 "Tm": re.search(r"[A-Z]{3}", teams.iloc[0]).group(),
-                "Yrs": int(re.search(r"\d+", teams.iloc[0]).group())
+                "Yrs": int(re.search(r"\\d+", teams.iloc[0]).group())
             }
             teams = pd.concat([pd.DataFrame(_add), teams])
 
@@ -409,8 +424,8 @@ class _BattingOverview:
             leagues.drop(columns=["Pos", "Awards"], inplace=True)
             _add = {
                 "Lg": re.search(r"[A-Z]{2}", leagues.iloc[0]).group(),
-                "Yrs": int(re.search(r"\d+", leagues.iloc[0]).group())
+                "Yrs": int(re.search(r"\\d+", leagues.iloc[0]).group())
             }
             leagues = pd.concat([pd.DataFrame(_add), leagues])
 
-        return self._StandardBatting(seasons, career, season_average, teams, leagues)
+        return self._StandardBatting(seasons, career, season_average, teams, leagues)"""

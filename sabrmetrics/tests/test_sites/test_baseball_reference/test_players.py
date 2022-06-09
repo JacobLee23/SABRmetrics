@@ -82,7 +82,7 @@ class TestPlayerIndex:
 
 
 @pytest.mark.parametrize(
-    "overview", [players.Player(x) for x in PLAYERS]
+    "player", [players.Player(x) for x in PLAYERS]
 )
 class TestPlayers:
     """
@@ -202,7 +202,6 @@ class TestOverview:
     """
 
     """
-
     def test_player_id(self, overview: players._BattingOverview):
         """
 
@@ -225,14 +224,22 @@ class TestOverview:
         with urllib.request.urlopen(overview.url) as res:
             assert res.getcode() == 200
 
-    def test_tables(self, overview: players._BattingOverview):
+    def test_response(self, overview: players._BattingOverview):
         """
 
         """
-        assert len(overview.tables) == 16
+        assert overview.response.status_code == 200
 
-    def test_standard_batting(self, overview: players._BattingOverview):
+    def test_soup(self, overview: players._BattingOverview):
         """
 
         """
-        data = overview.standard_batting()
+        assert overview.soup
+        for name, css in overview._css.items():
+            if name in (
+                "Postseason Batting",
+                "Similarity Scores",
+                "Salaries"
+            ):
+                continue
+            assert len(overview.soup.select(css)) == 1, name

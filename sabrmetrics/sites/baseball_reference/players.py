@@ -272,7 +272,7 @@ class _BattingOverview:
     """
     _css = {
         "Standard Batting": "div#all_batting_standard",
-        "Batting Value": "div#all_batting_value",
+        "Player Value": "div#all_batting_value",
         "Advanced Batting": "div#all_batting_advanced",
         "Postseason Batting": "div#all_batting_postseason",
         "Standard Fielding": "div#all_standard_fielding",
@@ -295,6 +295,8 @@ class _BattingOverview:
         self._response = requests.get(self.url)
         self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
 
+        self._tables = self._scrape_tables()
+
     class _StandardBatting(typing.NamedTuple):
         """
 
@@ -304,6 +306,15 @@ class _BattingOverview:
         season_average: pd.Series
         teams: pd.DataFrame = None
         leagues: pd.DataFrame = None
+
+    class _PlayerValue(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        career: pd.Series
+        season_average: pd.Series
+        teams: pd.DataFrame = None
 
     @property
     def player_id(self) -> str:
@@ -340,7 +351,14 @@ class _BattingOverview:
         """
         return self._soup
 
+    @property
     def tables(self) -> dict[str, pd.DataFrame]:
+        """
+        :return:
+        """
+        return self._tables
+
+    def _scrape_tables(self) -> dict[str, pd.DataFrame]:
         """
         :return:
         """
@@ -369,7 +387,7 @@ class _BattingOverview:
         """
         :return:
         """
-        df_ = self.tables()["Standard Batting"]
+        df_ = self.tables["Standard Batting"]
 
         if not minors:
             df_.drop(
@@ -384,15 +402,15 @@ class _BattingOverview:
         dividers = [s for s in df_.index if df_.loc[s].isna().all()]
         if len(dividers) == 2:
             seasons, career, season_average, teams, leagues = (
-                df_.iloc[:dividers[0] - 3, :].copy(),
+                df_.iloc[:dividers[0] - 2, :].copy(),
                 df_.iloc[(dividers[0] - 2), :].copy(),
                 df_.iloc[(dividers[0] - 1), :].copy(),
-                df_.iloc[(dividers[0] + 1):(dividers[1] - 1), :].copy(),
+                df_.iloc[(dividers[0] + 1):dividers[1], :].copy(),
                 df_.iloc[(dividers[1] + 1):, :].copy()
             )
         elif len(dividers) == 1:
             seasons, career, season_average, teams, leagues = (
-                df_.iloc[:dividers[0] - 3, :].copy(),
+                df_.iloc[:dividers[0] - 2, :].copy(),
                 df_.iloc[(dividers[0] - 2), :].copy(),
                 df_.iloc[(dividers[0] - 1), :].copy(),
                 df_.iloc[(dividers[0] + 1):, :].copy(),
@@ -400,7 +418,7 @@ class _BattingOverview:
             )
         else:
             seasons, career, season_average, teams, leagues = (
-                df_.iloc[:-3, :].copy(),
+                df_.iloc[:-2, :].copy(),
                 df_.iloc[-2, :].copy(),
                 df_.iloc[-1, :].copy(),
                 None,
@@ -435,7 +453,12 @@ class _BattingOverview:
                 "Tm": [re.search(r"[A-Z]+", x).group() for x in teams.iloc[:, 0]],
                 "Yrs": [int(re.search(r"\d+", x).group()) for x in teams.iloc[:, 0]]
             }
-            teams = pd.concat([pd.DataFrame(_add), teams])
+            teams = pd.concat(
+                [
+                    pd.DataFrame(_add),
+                    teams.reset_index(drop=True).iloc[:, 4:]
+                ], axis=1
+            )
 
         if leagues is not None:
             leagues.drop(columns=["Pos", "Awards"], inplace=True)
@@ -443,6 +466,67 @@ class _BattingOverview:
                 "Lg": [re.search(r"[A-Z]+", x).group() for x in leagues.iloc[:, 0]],
                 "Yrs": [int(re.search(r"\d+", x).group()) for x in leagues.iloc[:, 0]]
             }
-            leagues = pd.concat([pd.DataFrame(_add), leagues])
+            leagues = pd.concat(
+                [
+                    pd.DataFrame(_add),
+                    leagues.reset_index(drop=True).iloc[:, 4:]
+                ], axis=1
+            )
 
         return self._StandardBatting(seasons, career, season_average, teams, leagues)
+
+    def player_value(self) -> _PlayerValue:
+        """
+        :return:
+        """
+        df_ = self.tables["Player Value"]
+
+        dividers = [s for s in df_.index if df_.loc[s].isna().all()]
+        if dividers:
+            seasons, career, season_average, teams = (
+                df_.iloc[:(dividers[0] - 2)].copy(),
+                df_.iloc[dividers[0] - 2].copy(),
+                df_.iloc[dividers[0] - 1].copy(),
+                df_.iloc[(dividers[0] + 1):].copy()
+            )
+        else:
+            seasons, career, season_average, teams = (
+                df_.iloc[:-2].copy(),
+                df_.iloc[-2].copy(),
+                df_.iloc[-1].copy(),
+                None
+            )
+
+        seasons.loc[:, "Pos"] = seasons.loc[:, "Pos"].apply(
+            lambda x: re.findall(r"[*/][0-9HD]", x) if isinstance(x, str) else np.nan
+        )
+        seasons.loc[:, "Awards"] = seasons.loc[:, "Awards"].apply(
+            lambda x: (np.nan if "\xa0" in x else x.split(",")) if isinstance(x, str) else np.nan
+        )
+
+        career.drop(labels=["Pos", "Awards"], inplace=True)
+        _add = {
+            "Yrs": int(re.search(r"\d+", career.iloc[0]).group())
+        }
+        career = pd.concat([pd.Series(_add), career.iloc[4:]])
+
+        season_average.drop(labels=["Pos", "Awards"], inplace=True)
+        _add = {
+            "Gms": int(re.search(r"\d+", season_average.iloc[0]).group())
+        }
+        season_average = pd.concat([pd.Series(_add), career.iloc[4:]])
+
+        if teams is not None:
+            teams.drop(columns=["Pos", "Awards"], inplace=True)
+            _add = {
+                "Tm": [re.search(r"[A-Z]+", x).group() for x in teams.iloc[:, 0]],
+                "Yrs": [int(re.search(r"\d+", x).group()) for x in teams.iloc[:, 0]]
+            }
+            teams = pd.concat(
+                [
+                    pd.DataFrame(_add),
+                    teams.reset_index(drop=True).iloc[:, 4:]
+                ], axis=1
+            )
+
+        return self._PlayerValue(seasons, career, season_average, teams)

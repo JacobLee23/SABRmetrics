@@ -272,3 +272,9 @@ class TestOverview:
 
         """
         data = overview.standard_batting()
+
+    def test_player_value(self, overview: players._BattingOverview):
+        """
+
+        """
+        data = overview.player_value()

@@ -243,3 +243,32 @@ class TestOverview:
             ):
                 continue
             assert len(overview.soup.select(css)) == 1, name
+
+    def test_tables(self, overview: players._BattingOverview):
+        """
+
+        """
+        for name, css in overview._css.items():
+            if name in (
+                "Postseason Batting",
+                "Similarity Scores",
+                "Salaries"
+            ):
+                continue
+
+            elem = overview.soup.select_one(css)
+            if "commented" not in elem.attrs.get("class"):
+                assert elem.select_one("table") is not None, name
+            else:
+                assert (
+                    x := elem.findAll(string=lambda s: isinstance(s, bs4.Comment))
+                ), name
+                assert bs4.BeautifulSoup(
+                    x[0], features="lxml"
+                ).select_one("table") is not None, name
+
+    def test_standard_batting(self, overview: players._BattingOverview):
+        """
+
+        """
+        data = overview.standard_batting()

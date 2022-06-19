@@ -2,8 +2,6 @@
 
 """
 
-import datetime
-import math
 import re
 import string
 import typing
@@ -11,7 +9,6 @@ import typing
 import bs4
 import numpy as np
 import pandas as pd
-from playwright.sync_api import sync_playwright
 import requests
 
 from . import _urls
@@ -283,7 +280,6 @@ class _BattingOverview:
         "Leaderboard": "div#all_leaderboard",
         "Hall of Fame Statistics": "div#all_hof_other",
         "Similarity Scores": "div#ss_other",
-        "Transactions": "div#all_transactions_other",
         "Salaries": "div#all_br-salaries"
     }
 
@@ -344,88 +340,109 @@ class _BattingOverview:
         """
         return self._soup
 
-    """
-    def standard_batting(self, minors: bool = False) -> _StandardBatting:
-        \"""
+    def tables(self) -> dict[str, pd.DataFrame]:
+        """
         :return:
-        \"""
-        df_ = self.tables[]     # FIXME
+        """
+        res = {}
+
+        for name, css in self._css.items():
+            elem = self.soup.select_one(css)
+
+            if elem is None:
+                df_ = None
+            else:
+                try:
+                    df_ = pd.read_html(str(elem))[0]
+                except ValueError:
+                    df_ = pd.read_html(
+                        elem.findAll(
+                            string=lambda s: isinstance(s, bs4.Comment)
+                        )[0]
+                    )[0]
+
+            res.setdefault(name, df_)
+
+        return res
+
+    def standard_batting(self, minors: bool = False) -> _StandardBatting:
+        """
+        :return:
+        """
+        df_ = self.tables()["Standard Batting"]
 
         if not minors:
             df_.drop(
                 index=[
-                    x for x in df_.index
-                    if not math.isnan(df_.loc[x, "Tm"]) and "min" in df_.loc[x, "Tm"]
+                    s for s in df_.index
+                    if isinstance(df_.loc[s, "Tm"], str) and "min" in df_.loc[s, "Tm"]
                 ],
                 inplace=True
             )
+            df_.reset_index(drop=True, inplace=True)
 
-        dividers = [x for x in df_.index if df_.loc[x].isna().all()]
+        dividers = [s for s in df_.index if df_.loc[s].isna().all()]
         if len(dividers) == 2:
             seasons, career, season_average, teams, leagues = (
-                df_.loc[:dividers[0] - 3, :],
-                df_.loc[(dividers[0] - 2), :],
-                df_.loc[(dividers[0] - 1), :],
-                df_.loc[(dividers[0] + 1):(dividers[1] - 1), :],
-                df_.loc[(dividers[1] + 1):, :]
+                df_.iloc[:dividers[0] - 3, :].copy(),
+                df_.iloc[(dividers[0] - 2), :].copy(),
+                df_.iloc[(dividers[0] - 1), :].copy(),
+                df_.iloc[(dividers[0] + 1):(dividers[1] - 1), :].copy(),
+                df_.iloc[(dividers[1] + 1):, :].copy()
             )
         elif len(dividers) == 1:
             seasons, career, season_average, teams, leagues = (
-                df_.loc[:dividers[0] - 3, :],
-                df_.loc[(dividers[0] - 2), :],
-                df_.loc[(dividers[0] - 1), :],
-                df_.loc[(dividers[0] + 1):, :],
+                df_.iloc[:dividers[0] - 3, :].copy(),
+                df_.iloc[(dividers[0] - 2), :].copy(),
+                df_.iloc[(dividers[0] - 1), :].copy(),
+                df_.iloc[(dividers[0] + 1):, :].copy(),
                 None
             )
         else:
             seasons, career, season_average, teams, leagues = (
-                df_.loc[:-3, :],
-                df_.loc[-2, :],
-                df_.loc[-1, :],
+                df_.iloc[:-3, :].copy(),
+                df_.iloc[-2, :].copy(),
+                df_.iloc[-1, :].copy(),
                 None,
                 None
             )
 
-        seasons.drop(
-            index=[x for x in seasons.index if "min" in seasons.loc[x, "Tm"]],
-            inplace=True
-        )
         seasons.loc[:, "Lg"] = seasons.loc[:, "Lg"].apply(
             lambda x: x.split(",")
         )
         seasons.loc[:, "Pos"] = seasons.loc[:, "Pos"].apply(
-            lambda x: re.findall(r"[*/][0-9HD]", x) if not math.isnan(x) else np.nan
+            lambda x: re.findall(r"[*/][0-9HD]", x) if isinstance(x, str) else np.nan
         )
         seasons.loc[:, "Awards"] = seasons.loc[:, "Awards"].apply(
-            lambda x: np.nan if math.isnan(x) else (np.nan if "\xa0" in x else x.split(","))
+            lambda x: (np.nan if "\xa0" in x else x.split(",")) if isinstance(x, str) else np.nan
         )
 
         career.drop(labels=["Pos", "Awards"], inplace=True)
         _add = {
-            "Yrs": int(re.search(r"\\d+", career.iloc[0]).group())
+            "Yrs": int(re.search(r"\d+", career.iloc[0]).group())
         }
         career = pd.concat([pd.Series(_add), career.iloc[4:]])
 
         season_average.drop(labels=["Pos", "Awards"], inplace=True)
         _add = {
-            "Gms": int(re.search(r"\\d+", season_average.iloc[0]).group())
+            "Gms": int(re.search(r"\d+", season_average.iloc[0]).group())
         }
         season_average = pd.concat([pd.Series(_add), career.iloc[4:]])
 
         if teams is not None:
             teams.drop(columns=["Pos", "Awards"], inplace=True)
             _add = {
-                "Tm": re.search(r"[A-Z]{3}", teams.iloc[0]).group(),
-                "Yrs": int(re.search(r"\\d+", teams.iloc[0]).group())
+                "Tm": [re.search(r"[A-Z]+", x).group() for x in teams.iloc[:, 0]],
+                "Yrs": [int(re.search(r"\d+", x).group()) for x in teams.iloc[:, 0]]
             }
             teams = pd.concat([pd.DataFrame(_add), teams])
 
         if leagues is not None:
             leagues.drop(columns=["Pos", "Awards"], inplace=True)
             _add = {
-                "Lg": re.search(r"[A-Z]{2}", leagues.iloc[0]).group(),
-                "Yrs": int(re.search(r"\\d+", leagues.iloc[0]).group())
+                "Lg": [re.search(r"[A-Z]+", x).group() for x in leagues.iloc[:, 0]],
+                "Yrs": [int(re.search(r"\d+", x).group()) for x in leagues.iloc[:, 0]]
             }
             leagues = pd.concat([pd.DataFrame(_add), leagues])
 
-        return self._StandardBatting(seasons, career, season_average, teams, leagues)"""
+        return self._StandardBatting(seasons, career, season_average, teams, leagues)

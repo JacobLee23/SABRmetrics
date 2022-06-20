@@ -290,7 +290,7 @@ class TestOverview:
         """
         assert "Advanced Batting" in overview.tables
 
-        df = overview.tables["Advanced Batting"]
+        df = overview.tables.get("Advanced Batting")
         assert isinstance(df.columns, pd.MultiIndex)
 
         data = overview.advanced_batting()

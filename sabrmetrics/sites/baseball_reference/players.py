@@ -395,7 +395,7 @@ class _BattingOverview:
         """
         :return:
         """
-        df_ = self.tables["Standard Batting"]
+        df_ = self.tables.get("Standard Batting")
 
         if not minors:
             df_.drop(
@@ -487,7 +487,7 @@ class _BattingOverview:
         """
         :return:
         """
-        df_ = self.tables["Player Value"]
+        df_ = self.tables.get("Player Value")
 
         dividers = [s for s in df_.index if df_.loc[s].isna().all()]
         if dividers:
@@ -543,7 +543,7 @@ class _BattingOverview:
         """
         :return:
         """
-        df_ = self.tables["Advanced Batting"]
+        df_ = self.tables.get("Advanced Batting")
         df_.columns = df_.columns.droplevel()
 
         seasons, career, mlb_averages = (

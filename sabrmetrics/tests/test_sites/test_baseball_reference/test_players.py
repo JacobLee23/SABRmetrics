@@ -8,6 +8,7 @@ import string
 import urllib.request
 
 import bs4
+import pandas as pd
 import pytest
 
 from sabrmetrics.sites.baseball_reference import players
@@ -271,10 +272,25 @@ class TestOverview:
         """
 
         """
+        assert "Standard Batting" in overview.tables
+
         data = overview.standard_batting()
 
     def test_player_value(self, overview: players._BattingOverview):
         """
 
         """
+        assert "Player Value" in overview.tables
+
         data = overview.player_value()
+
+    def test_advanced_batting(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Advanced Batting" in overview.tables
+
+        df = overview.tables["Advanced Batting"]
+        assert isinstance(df.columns, pd.MultiIndex)
+
+        data = overview.advanced_batting()

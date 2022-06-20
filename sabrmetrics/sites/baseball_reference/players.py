@@ -316,6 +316,14 @@ class _BattingOverview:
         season_average: pd.Series
         teams: pd.DataFrame = None
 
+    class _AdvancedBatting(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        career: pd.Series
+        mlb_averages: pd.Series
+
     @property
     def player_id(self) -> str:
         """
@@ -530,3 +538,23 @@ class _BattingOverview:
             )
 
         return self._PlayerValue(seasons, career, season_average, teams)
+
+    def advanced_batting(self) -> _AdvancedBatting:
+        """
+        :return:
+        """
+        df_ = self.tables["Advanced Batting"]
+        df_.columns = df_.columns.droplevel()
+
+        seasons, career, mlb_averages = (
+            df_.iloc[:-2], df_.iloc[-2], df_.iloc[-1]
+        )
+
+        _add = {
+            "Yrs": int(re.search(r"\d+", career.iloc[0]).group())
+        }
+        career = pd.concat([pd.Series(_add), career.iloc[4:]])
+
+        mlb_averages = mlb_averages.iloc[4:]
+
+        return self._AdvancedBatting(seasons, career, mlb_averages)

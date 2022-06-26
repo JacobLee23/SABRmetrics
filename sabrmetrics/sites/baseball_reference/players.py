@@ -324,6 +324,14 @@ class _BattingOverview:
         career: pd.Series
         mlb_averages: pd.Series
 
+    class _PostseasonBatting(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        career: pd.Series = None
+        series_types: pd.Series = None
+
     @property
     def player_id(self) -> str:
         """
@@ -558,3 +566,50 @@ class _BattingOverview:
         mlb_averages = mlb_averages.iloc[4:]
 
         return self._AdvancedBatting(seasons, career, mlb_averages)
+
+    def postseason_batting(self) -> typing.Optional[_PostseasonBatting]:
+        """
+        :return:
+        """
+        seasons_regex = re.compile(r"^\d+$")
+        career_regex = re.compile(r"^(\d+) Yrs \((\d+) Series\)$")
+        series_types_regex = re.compile(r"^(\d+) (WS|((AL|NL)(WC|DS|CS)))$")
+
+        df_ = self.tables.get("Postseason Batting")
+        if df_ is None:
+            return
+        df_ = df_.dropna(how="all").reset_index(drop=True)
+
+        seasons = df_.iloc[
+            [x for x in df_.index if seasons_regex.search(str(df_.loc[x, "Year"]))]
+        ]
+        try:
+            career = df_.iloc[
+                [x for x in df_.index if career_regex.search(str(df_.loc[x, "Year"]))][0]
+            ]
+        except IndexError:
+            career = None
+        series_types = df_.iloc[
+            [x for x in df_.index if series_types_regex.search(str(df_.loc[x, "Year"]))]
+        ]
+
+        if career is not None:
+            _add = {
+                "Yrs": int(career_regex.search(career.iloc[0]).group(1)),
+                "Series": int(career_regex.search(career.iloc[0]).group(2))
+            }
+            career = pd.concat([pd.Series(_add), career.iloc[7:]])
+
+        if series_types is not None:
+            _add = {
+                "Type": [series_types_regex.search(x).group(2) for x in series_types.iloc[:, 0]],
+                "Count": [series_types_regex.search(x).group(1) for x in series_types.iloc[:, 0]]
+            }
+            series_types = pd.concat(
+                [
+                    pd.DataFrame(_add),
+                    series_types.reset_index(drop=True).iloc[:, 7:]
+                ], axis=1
+            )
+
+        return self._PostseasonBatting(seasons, career, series_types)

@@ -294,3 +294,13 @@ class TestOverview:
         assert isinstance(df.columns, pd.MultiIndex)
 
         data = overview.advanced_batting()
+
+    def test_postseason_batting(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Postseason Batting" in overview.tables
+        if overview.tables.get("Postseason Batting") is None:
+            return
+
+        data = overview.postseason_batting()

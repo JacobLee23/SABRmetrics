@@ -695,5 +695,14 @@ class _BattingOverview:
 
         return dict(zip(titles, [pd.Series(x.iloc[:, 0]) for x in dfs]))
 
+    def hall_of_fame_statistics(self):
+        """
+        :return:
+        """
+        pass
 
-
+    def similarity_scores(self):
+        """
+        :return:
+        """
+        pass

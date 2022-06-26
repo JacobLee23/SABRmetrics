@@ -341,3 +341,15 @@ class TestOverview:
         data = overview.leaderboard()
 
         assert len(titles) == len(dfs) == len(data)
+
+    def test_hall_of_fame_statistics(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Hall of Fame Statistics" in overview.tables
+
+    def test_similarity_scores(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Similarity Scores" in overview.tables

@@ -312,3 +312,11 @@ class TestOverview:
         assert "Standard Fielding" in overview.tables
 
         data = overview.standard_fielding()
+
+    def test_appearances(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Appearances" in overview.tables
+
+        data = overview.appearances()

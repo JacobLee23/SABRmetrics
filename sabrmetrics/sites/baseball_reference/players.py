@@ -339,6 +339,13 @@ class _BattingOverview:
         seasons: pd.DataFrame
         positions: pd.DataFrame
 
+    class _Appearances(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        total: pd.Series
+
     @property
     def player_id(self) -> str:
         """
@@ -654,3 +661,22 @@ class _BattingOverview:
         )
 
         return self._StandardFielding(seasons, positions)
+
+    def appearances(self) -> _Appearances:
+        """
+        :return:
+        """
+        seasons_regex = re.compile(r"^(\d+) Seasons$")
+
+        df_ = self.tables.get("Appearances")
+
+        seasons = df_.iloc[:-1, :].copy()
+        total = df_.iloc[-1].copy()
+
+        total.drop(columns=["Lg"], inplace=True)
+        _add = {
+            "Seasons": int(seasons_regex.search(total.iloc[0]).group(1))
+        }
+        total = pd.concat([pd.Series(_add), total.iloc[4:]])
+
+        return self._Appearances(seasons, total)

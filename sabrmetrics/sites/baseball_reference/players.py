@@ -346,6 +346,15 @@ class _BattingOverview:
         seasons: pd.DataFrame
         total: pd.Series
 
+    class _Salaries(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        arbitration_eligible: int = None
+        free_agent: int = None
+        career_to_date: int = None
+
     @property
     def player_id(self) -> str:
         """
@@ -592,7 +601,8 @@ class _BattingOverview:
         df_ = self.tables.get("Postseason Batting")
         if df_ is None:
             return
-        df_ = df_.dropna(how="all").reset_index(drop=True)
+        df_.dropna(how="all", inplace=True)
+        df_ = df_.reset_index(drop=True)
 
         seasons = df_.iloc[
             [x for x in df_.index if seasons_regex.search(str(df_.loc[x, "Year"]))]
@@ -706,3 +716,27 @@ class _BattingOverview:
         :return:
         """
         pass
+
+    def salaries(self) -> typing.Optional[_Salaries]:
+        """
+        :return:
+        """
+        df_ = self.tables.get("Salaries")
+        if df_ is None:
+            return
+        df_.dropna(how="all", inplace=True)
+        df_.reset_index(drop=True)
+
+        _all = re.findall(r"\d+", df_.iloc[-2, 2])
+        if len(_all) == 2:
+            arbitration_eligible = int(_all[0])
+            free_agent = int(_all[1])
+        else:
+            arbitration_eligible = None
+            free_agent = int(_all[0])
+
+        career_to_date = int("".join(re.findall(r"\d+", df_.iloc[-1, 3])))
+
+        df_.drop(index=df_.index[-2:], inplace=True)
+
+        return self._Salaries(df_, arbitration_eligible, free_agent, career_to_date)

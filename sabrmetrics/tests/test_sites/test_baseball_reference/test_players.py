@@ -353,3 +353,9 @@ class TestOverview:
 
         """
         assert "Similarity Scores" in overview.tables
+
+    def test_salaries(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Salaries" in overview.tables

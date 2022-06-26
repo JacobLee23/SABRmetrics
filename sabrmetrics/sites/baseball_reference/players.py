@@ -404,9 +404,9 @@ class _BattingOverview:
                     df_ = pd.read_html(str(elem))[0]
                 except ValueError:
                     df_ = pd.read_html(
-                        elem.findAll(
+                        elem.find(
                             string=lambda s: isinstance(s, bs4.Comment)
-                        )[0]
+                        )
                     )[0]
 
             res.setdefault(name, df_)
@@ -680,3 +680,20 @@ class _BattingOverview:
         total = pd.concat([pd.Series(_add), total.iloc[4:]])
 
         return self._Appearances(seasons, total)
+
+    def leaderboard(self) -> dict[str, pd.Series]:
+        """
+        :return:
+        """
+        container = self.soup.select_one(
+            self._css.get("Leaderboard")
+        ).find(string=lambda s: isinstance(s, bs4.Comment))
+        soup_ = bs4.BeautifulSoup(container, features="lxml")
+
+        titles = [x.text for x in soup_.select("table > caption")]
+        dfs = pd.read_html(container)
+
+        return dict(zip(titles, [pd.Series(x.iloc[:, 0]) for x in dfs]))
+
+
+

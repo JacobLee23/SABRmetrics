@@ -320,3 +320,24 @@ class TestOverview:
         assert "Appearances" in overview.tables
 
         data = overview.appearances()
+
+    def test_leaderboard(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Leaderboard" in overview.tables
+
+        container = overview.soup.select_one(
+            overview._css.get("Leaderboard")
+        ).find(string=lambda s: isinstance(s, bs4.Comment))
+        assert container
+        soup_ = bs4.BeautifulSoup(container, features="lxml")
+
+        assert soup_.select("table > caption")
+        titles = [x.text for x in soup_.select("table > caption")]
+        assert all(titles)
+        dfs = pd.read_html(container)
+
+        data = overview.leaderboard()
+
+        assert len(titles) == len(dfs) == len(data)

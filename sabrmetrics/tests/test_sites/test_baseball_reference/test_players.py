@@ -304,3 +304,11 @@ class TestOverview:
             return
 
         data = overview.postseason_batting()
+
+    def test_standard_fielding(self, overview: players._BattingOverview):
+        """
+
+        """
+        assert "Standard Fielding" in overview.tables
+
+        data = overview.standard_fielding()

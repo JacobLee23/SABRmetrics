@@ -332,6 +332,13 @@ class _BattingOverview:
         career: pd.Series = None
         series_types: pd.Series = None
 
+    class _StandardFielding(typing.NamedTuple):
+        """
+
+        """
+        seasons: pd.DataFrame
+        positions: pd.DataFrame
+
     @property
     def player_id(self) -> str:
         """
@@ -613,3 +620,37 @@ class _BattingOverview:
             )
 
         return self._PostseasonBatting(seasons, career, series_types)
+
+    def standard_fielding(self) -> _StandardFielding:
+        """
+        :return:
+        """
+        seasons_regex = re.compile(r"^\d+$")
+        positions_regex = re.compile(r"^(\d+) Seasons?$")
+
+        df_ = self.tables.get("Standard Fielding")
+
+        seasons = df_.iloc[
+            [x for x in df_.index if seasons_regex.search(str(df_.iloc[x, 0]))]
+        ].copy()
+        positions = df_.iloc[
+            [x for x in df_.index if positions_regex.search(str(df_.iloc[x, 0]))]
+        ].copy()
+
+        seasons.loc[:, "Awards"] = seasons.loc[:, "Awards"].apply(
+            lambda x: (np.nan if "\xa0" in x else x.split(",")) if isinstance(x, str) else np.nan
+        )
+
+        positions.drop(columns=["Lg", "Awards"], inplace=True)
+        _add = {
+            "Seasons": [int(positions_regex.search(x).group(1)) for x in positions.iloc[:, 0]]
+        }
+        positions = pd.concat(
+            [
+                positions.reset_index(drop=True).iloc[:, 3],
+                pd.DataFrame(_add),
+                positions.reset_index(drop=True).iloc[:, 5:]
+            ], axis=1
+        )
+
+        return self._StandardFielding(seasons, positions)

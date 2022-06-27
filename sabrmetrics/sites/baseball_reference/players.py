@@ -168,6 +168,114 @@ class _PlayerPageScraper:
         )
 
 
+class _Meta(_PlayerPageScraper):
+    """
+
+    """
+    _css = "div#meta > div:nth-child(2)"
+
+    _positions = [
+        "Pitcher", "Catcher", "First Baseman",
+        "Second Baseman", "Third Baseman", "Shortstop",
+        "Leftfielder", "Centerfielder", "Rightfielder",
+        "Designated Hitter", "Outfielder"
+    ]
+
+    _bats_regex = re.compile(r"Bats: (Right|Left|Both)")
+    _throws_regex = re.compile(r"Throws: (Right|Left|Both)")
+    _height_regex = re.compile(r"(\d+)-(\d+)")
+    _weight_regex = re.compile(r"(\d+)lb")
+    _height_si_regex = re.compile(r"(\d+)cm")
+    _weight_si_regex = re.compile(r"(\d+)kg")
+
+    def __init__(self, player_id: str):
+        """
+        :param player_id:
+        """
+        super().__init__(player_id)
+
+        self._container = self.soup.select_one(self._css)
+
+    @property
+    def container(self) -> bs4.Tag:
+        """
+        :return:
+        """
+        return self._container
+
+    @property
+    def name(self) -> str:
+        """
+        :return:
+        """
+        return self.container.select_one("h1 > span").text.strip()
+
+    @property
+    def images(self) -> list[str]:
+        """
+        :return:
+        """
+        return [
+            e.attrs.get("src") for e in self.container.select(
+                "div.media-item.multiple > img"
+            )
+        ]
+
+    @property
+    def content(self) -> str:
+        """
+        :return:
+        """
+        return "\n".join(
+            " ".join(e.text.strip().split()) for e in self.container.select("div > p")
+        )
+
+    @property
+    def positions(self) -> list[str]:
+        """
+        :return:
+        """
+        return [x for x in self._positions if x in self.content]
+
+    @property
+    def bats(self) -> str:
+        """
+        :return:
+        """
+        return self._bats_regex.search(self.content).group(1)
+
+    @property
+    def throws(self) -> str:
+        """
+        :return:
+        """
+        return self._throws_regex.search(self.content).group(1)
+
+    @property
+    def height(self) -> tuple[tuple[int, int], int]:
+        """
+
+        """
+        height = (
+            int(self._height_regex.search(self.content).group(1)),
+            int(self._height_regex.search(self.content).group(2))
+        )
+        height_si = int(self._height_si_regex.search(self.content).group(1))
+        return height, height_si
+
+    @property
+    def weight(self) -> tuple[tuple[int, int], int]:
+        """
+
+        """
+        weight = (
+            int(self._weight_regex.search(self.content).group(1)),
+            int(self._weight_regex.search(self.content).group(2))
+        )
+        weight_si = int(self._weight_si_regex.search(self.content).group(1))
+        return weight, weight_si
+
+
 class _BattingOverview(_PlayerPageScraper):
     """
 
@@ -599,25 +707,15 @@ class Player(_PlayerPageScraper):
         """
         super().__init__(player_id)
 
-        self._meta = self._scrape_meta()
+        self._meta = _Meta(self.player_id)
         self._accolades = self._scrape_accolades()
         self._jerseys = self._scrape_jerseys()
         self._stats_pullout = self._scrape_stats_pullout()
 
-        # TODO: Determine whether player has 'Batting Overview' section
-        self._batting_overview = _BattingOverview(self.player_id)
-
-    class _Meta(typing.NamedTuple):
-        """
-        .. py:attribute:: name
-
-        .. py:attribute:: src
-
-        .. py:attribute:: content
-        """
-        name: str
-        src: list[str]
-        content: str
+        if any(x != "Pitcher" for x in self.meta.positions):
+            self._batting_overview = _BattingOverview(self.player_id)
+        else:
+            self._batting_overview = None
 
     class _Jersey(typing.NamedTuple):
         """
@@ -630,22 +728,6 @@ class Player(_PlayerPageScraper):
         number: int
         team: str
         years: tuple[int]
-
-    def _scrape_meta(self) -> _Meta:
-        """
-        :return:
-        """
-        container = self.soup.select_one("div#info > div#meta")
-
-        name = container.select_one("div > h1 > span").text.strip()
-        src = [
-            e.attrs.get("src") for e in container.select("div.media-item.multiple > img")
-        ]
-        content = "\n".join(
-            " ".join(e.text.strip().split()) for e in container.select("div > p")
-        )
-
-        return self._Meta(name=name, src=src, content=content)
 
     def _scrape_accolades(self) -> typing.Optional[typing.Tuple[str]]:
         """
@@ -702,24 +784,28 @@ class Player(_PlayerPageScraper):
 
         return df_
 
+    @property
     def meta(self) -> _Meta:
         """
         :return:
         """
         return self._meta
 
+    @property
     def accolades(self) -> typing.Optional[typing.Tuple[str]]:
         """
         :return:
         """
         return self._accolades
 
+    @property
     def jerseys(self) -> typing.Tuple[_Jersey]:
         """
         :return:
         """
         return self._jerseys
 
+    @property
     def stats_pullout(self) -> pd.DataFrame:
         """
         :return:
@@ -727,7 +813,7 @@ class Player(_PlayerPageScraper):
         return self._stats_pullout
 
     @property
-    def batting_overview(self) -> _BattingOverview:
+    def batting_overview(self) -> typing.Optional[_BattingOverview]:
         """
 
         """

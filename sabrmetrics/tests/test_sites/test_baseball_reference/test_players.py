@@ -83,6 +83,77 @@ class TestPlayerIndex:
 
 
 @pytest.mark.parametrize(
+    "meta", [players._Meta(x) for x in PLAYERS]
+)
+class TestMeta:
+    """
+
+    """
+    def test_container(self, meta: players._Meta):
+        """
+
+        """
+        assert len(meta.soup.select(meta._css)) == 1, meta.player_id
+
+    def test_name(self, meta: players._Meta):
+        """
+
+        """
+        assert len(meta.container.select("h1 > span")) == 1, meta.player_id
+        assert meta.container.select_one("h1 > span").text, meta.player_id
+
+    def test_images(self, meta: players._Meta):
+        """
+
+        """
+        assert meta.soup.select("div#meta > div.media-item.multiple > img")
+        assert all(
+            e.attrs.get("src") is not None
+            for e in meta.soup.select("div#meta > div.media-item.multiple > img")
+        )
+
+    def test_content(self, meta: players._Meta):
+        """
+
+        """
+        assert meta.container.select("div > p")
+
+    def test_positions(self, meta: players._Meta):
+        """
+
+        """
+        assert len(
+            [x for x in meta._positions if x in meta.content]
+        ) >= 1, meta.player_id
+
+    def test_bats(self, meta: players._Meta):
+        """
+
+        """
+        assert meta._bats_regex.search(meta.content), meta.player_id
+
+    def test_throws(self, meta: players._Meta):
+        """
+
+        """
+        assert meta._throws_regex.search(meta.content), meta.player_id
+
+    def test_height(self, meta: players._Meta):
+        """
+
+        """
+        assert meta._height_regex.search(meta.content), meta.player_id
+        assert meta._height_si_regex.search(meta.content), meta.player_id
+
+    def test_weight(self, meta: players._Meta):
+        """
+
+        """
+        assert meta._weight_regex.search(meta.content), meta.player_id
+        assert meta._weight_si_regex.search(meta.content), meta.player_id
+
+
+@pytest.mark.parametrize(
     "overview", [players._BattingOverview(x) for x in BATTERS]
 )
 class TestOverview:
@@ -282,20 +353,7 @@ class TestPlayers:
         """
 
         """
-        assert len(player.soup.select("div#info > div#meta")) == 1
-        container = player.soup.select_one("div#info > div#meta")
-        assert len(container.select("div > h1 > span")) == 1
-        assert container.select_one("div > h1 > span").text
-        assert len(container.select("div.media-item.multiple > img")) >= 1
-        assert all(
-            e.attrs.get("src") is not None
-            for e in container.select("div.media-item.multiple > img")
-        )
-        assert container.select("div > p")
-        assert all(e.text for e in container.select("div > p"))
-
-        meta = player.meta()
-        assert all(meta._asdict().values())
+        meta = player.meta
 
     def test_accolades(self, player: players.Player):
         """
@@ -315,7 +373,7 @@ class TestPlayers:
             assert re.search(r"^\d{4}-\d{4} (.*)$", elem.attrs.get("data-tip")) is not None
             assert len(re.findall(r"\d{4}", elem.attrs.get("data-tip"))) == 2
 
-        jerseys = player.jerseys()
+        jerseys = player.jerseys
         assert all(all(x._asdict().values()) for x in jerseys)
 
     def stats_pullout(self, player: players.Player):
@@ -341,7 +399,7 @@ class TestPlayers:
             assert len(elem.select("p")) == len(a) == len(b)
             assert all(e.text for e in elem.select("p"))
 
-        stats = player.stats_pullout()
+        stats = player.stats_pullout
         assert len(stats.index) in (1, 2)
         assert set(stats.index) in (
             {"Career"},
@@ -354,4 +412,5 @@ class TestPlayers:
         """
         overview = player.batting_overview
 
-        assert overview.player_id == player.player_id
+        if overview is not None:
+            assert overview.player_id == player.player_id

@@ -279,7 +279,6 @@ class _BattingOverview:
         "Appearances": "div#all_appearances",
         "Leaderboard": "div#all_leaderboard",
         "Hall of Fame Statistics": "div#all_hof_other",
-        "Similarity Scores": "div#ss_other",
         "Salaries": "div#all_br-salaries"
     }
 
@@ -706,12 +705,6 @@ class _BattingOverview:
         return dict(zip(titles, [pd.Series(x.iloc[:, 0]) for x in dfs]))
 
     def hall_of_fame_statistics(self):
-        """
-        :return:
-        """
-        pass
-
-    def similarity_scores(self):
         """
         :return:
         """

@@ -203,6 +203,16 @@ class TestOverview:
     """
 
     """
+    def test_css(self, overview: players._BattingOverview):
+        """
+
+        """
+        for name, css in overview._css.items():
+            try:
+                assert len(overview.soup.select(css)) == 1, name
+            except AssertionError:
+                assert name in ("Postseason Batting", "Salaries"), name
+
     def test_player_id(self, overview: players._BattingOverview):
         """
 
@@ -237,13 +247,10 @@ class TestOverview:
         """
         assert overview.soup
         for name, css in overview._css.items():
-            if name in (
-                "Postseason Batting",
-                "Similarity Scores",
-                "Salaries"
-            ):
-                continue
-            assert len(overview.soup.select(css)) == 1, name
+            try:
+                assert len(overview.soup.select(css)) == 1, name
+            except AssertionError:
+                assert name in ("Postseason Batting", "Salaries"), name
 
     def test_tables(self, overview: players._BattingOverview):
         """
@@ -252,7 +259,6 @@ class TestOverview:
         for name, css in overview._css.items():
             if name in (
                 "Postseason Batting",
-                "Similarity Scores",
                 "Salaries"
             ):
                 continue
@@ -347,12 +353,6 @@ class TestOverview:
 
         """
         assert "Hall of Fame Statistics" in overview.tables
-
-    def test_similarity_scores(self, overview: players._BattingOverview):
-        """
-
-        """
-        assert "Similarity Scores" in overview.tables
 
     def test_salaries(self, overview: players._BattingOverview):
         """

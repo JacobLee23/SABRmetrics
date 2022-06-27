@@ -278,7 +278,6 @@ class _BattingOverview:
         "Standard Fielding": "div#all_standard_fielding",
         "Appearances": "div#all_appearances",
         "Leaderboard": "div#all_leaderboard",
-        "Hall of Fame Statistics": "div#all_hof_other",
         "Salaries": "div#all_br-salaries"
     }
 
@@ -703,12 +702,6 @@ class _BattingOverview:
         dfs = pd.read_html(container)
 
         return dict(zip(titles, [pd.Series(x.iloc[:, 0]) for x in dfs]))
-
-    def hall_of_fame_statistics(self):
-        """
-        :return:
-        """
-        pass
 
     def salaries(self) -> typing.Optional[_Salaries]:
         """

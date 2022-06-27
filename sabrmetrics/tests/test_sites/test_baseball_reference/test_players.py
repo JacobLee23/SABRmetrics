@@ -348,12 +348,6 @@ class TestOverview:
 
         assert len(titles) == len(dfs) == len(data)
 
-    def test_hall_of_fame_statistics(self, overview: players._BattingOverview):
-        """
-
-        """
-        assert "Hall of Fame Statistics" in overview.tables
-
     def test_salaries(self, overview: players._BattingOverview):
         """
 

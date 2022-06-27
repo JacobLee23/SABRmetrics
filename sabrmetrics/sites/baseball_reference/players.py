@@ -110,61 +110,18 @@ class PlayerIndex:
             )
 
 
-class Player:
+class _PlayerPageScraper:
     """
 
     """
-    _base_address = _URLS.player
-
     def __init__(self, player_id: str):
         """
         :param player_id:
         """
         self._player_id = player_id.lower()
-        self._letter = self.player_id[0]
-
-        self._soup = get_soup(self.url)
-
-    class _Meta(typing.NamedTuple):
-        """
-        .. py:attribute:: name
-
-        .. py:attribute:: src
-
-        .. py:attribute:: content
-        """
-        name: str
-        src: list[str]
-        content: str
-
-    class _Jersey(typing.NamedTuple):
-        """
-        .. py:attiribute:: number
-
-        .. py:attribute:: team
-
-        .. py:attribute:: years
-        """
-        number: int
-        team: str
-        years: tuple[int]
-
-    @staticmethod
-    def url_concat(letter: str, player_id: str) -> str:
-        """
-
-        """
-        return _URLS.player.format(
-            letter=letter,
-            player_id=player_id
-        )
-
-    @property
-    def base_address(self) -> str:
-        """
-        :return:
-        """
-        return self._base_address
+        self._url = self.url_concat()
+        self._response = requests.get(self.url)
+        self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
 
     @property
     def player_id(self) -> str:
@@ -178,14 +135,21 @@ class Player:
         """
         :return:
         """
-        return self._letter
+        return self.player_id[0]
 
     @property
     def url(self) -> str:
         """
         :return:
         """
-        return self.url_concat(self.letter, self.player_id)
+        return self._url
+
+    @property
+    def response(self) -> requests.Response:
+        """
+        :return:
+        """
+        return self._response
 
     @property
     def soup(self) -> bs4.BeautifulSoup:
@@ -194,79 +158,17 @@ class Player:
         """
         return self._soup
 
-    def meta(self) -> _Meta:
+    def url_concat(self) -> str:
         """
-        :return:
-        """
-        container = self.soup.select_one("div#info > div#meta")
 
-        name = container.select_one("div > h1 > span").text.strip()
-        src = [
-            e.attrs.get("src") for e in container.select("div.media-item.multiple > img")
-        ]
-        content = "\n".join(
-            " ".join(e.text.strip().split()) for e in container.select("div > p")
+        """
+        return _URLS.player.format(
+            letter=self.letter,
+            player_id=self.player_id
         )
 
-        return self._Meta(name=name, src=src, content=content)
 
-    def accolades(self) -> typing.Optional[typing.Tuple[str]]:
-        """
-        :return:
-        """
-        container = self.soup.select_one("div#info > ul#bling")
-        if container is None:
-            return None
-
-        res = []
-        for elem in container.select("li > a"):
-            res.append(str(elem.text).strip())
-
-        return tuple(res)
-
-    def jerseys(self) -> typing.Tuple[_Jersey]:
-        """
-        :return:
-        """
-        container = self.soup.select_one("div#info > div.uni_holder.br")
-
-        res = []
-        for elem in container.select("a.poptip"):
-            number = int(elem.select_one("svg > text").text.strip())
-            team = re.search(
-                r"^\d{4}-\d{4} (.*)$", elem.attrs.get("data-tip").strip()
-            ).group(1)
-            years = tuple(
-                map(int, re.findall(r"\d{4}", elem.attrs.get("data-tip")))
-            )
-
-            res.append(
-                self._Jersey(number=number, team=team, years=years)
-            )
-
-        return tuple(res)
-
-    def stats_pullout(self) -> pd.DataFrame:
-        """
-        :return:
-        """
-        container = self.soup.select_one("div#info > div.stats_pullout")
-        df_ = pd.DataFrame(
-            columns=[
-                e.text.strip() for e in container.select("span.poptip > strong")
-            ],
-            index=[
-                e.text.strip() for e in container.select("div:nth-child(1) > div > p > strong")
-            ]
-        )
-
-        for i, elem in enumerate(container.select("div.p1 > div, div.p2 > div, div.p3 > div")):
-            df_.iloc[:, i] = list(map(float, (e.text.strip() for e in elem.select("p"))))
-
-        return df_
-
-
-class _BattingOverview:
+class _BattingOverview(_PlayerPageScraper):
     """
 
     """
@@ -285,13 +187,7 @@ class _BattingOverview:
         """
         :param player_id:
         """
-        self._player_id = player_id
-        self._letter = self.player_id[0]
-
-        self._url = Player.url_concat(self.letter, self.player_id)
-
-        self._response = requests.get(self.url)
-        self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
+        super().__init__(player_id)
 
         self._tables = self._scrape_tables()
 
@@ -352,41 +248,6 @@ class _BattingOverview:
         arbitration_eligible: int = None
         free_agent: int = None
         career_to_date: int = None
-
-    @property
-    def player_id(self) -> str:
-        """
-        :return:
-        """
-        return self._player_id
-
-    @property
-    def letter(self) -> str:
-        """
-        :return:
-        """
-        return self._letter
-
-    @property
-    def url(self) -> str:
-        """
-        :return:
-        """
-        return self._url
-
-    @property
-    def response(self) -> requests.Response:
-        """
-        :return:
-        """
-        return self._response
-
-    @property
-    def soup(self) -> bs4.BeautifulSoup:
-        """
-        :return:
-        """
-        return self._soup
 
     @property
     def tables(self) -> dict[str, pd.DataFrame]:
@@ -726,3 +587,148 @@ class _BattingOverview:
         df_.drop(index=df_.index[-2:], inplace=True)
 
         return self._Salaries(df_, arbitration_eligible, free_agent, career_to_date)
+
+
+class Player(_PlayerPageScraper):
+    """
+
+    """
+    def __init__(self, player_id: str):
+        """
+        :param player_id:
+        """
+        super().__init__(player_id)
+
+        self._meta = self._scrape_meta()
+        self._accolades = self._scrape_accolades()
+        self._jerseys = self._scrape_jerseys()
+        self._stats_pullout = self._scrape_stats_pullout()
+
+        # TODO: Determine whether player has 'Batting Overview' section
+        self._batting_overview = _BattingOverview(self.player_id)
+
+    class _Meta(typing.NamedTuple):
+        """
+        .. py:attribute:: name
+
+        .. py:attribute:: src
+
+        .. py:attribute:: content
+        """
+        name: str
+        src: list[str]
+        content: str
+
+    class _Jersey(typing.NamedTuple):
+        """
+        .. py:attiribute:: number
+
+        .. py:attribute:: team
+
+        .. py:attribute:: years
+        """
+        number: int
+        team: str
+        years: tuple[int]
+
+    def _scrape_meta(self) -> _Meta:
+        """
+        :return:
+        """
+        container = self.soup.select_one("div#info > div#meta")
+
+        name = container.select_one("div > h1 > span").text.strip()
+        src = [
+            e.attrs.get("src") for e in container.select("div.media-item.multiple > img")
+        ]
+        content = "\n".join(
+            " ".join(e.text.strip().split()) for e in container.select("div > p")
+        )
+
+        return self._Meta(name=name, src=src, content=content)
+
+    def _scrape_accolades(self) -> typing.Optional[typing.Tuple[str]]:
+        """
+        :return:
+        """
+        container = self.soup.select_one("div#info > ul#bling")
+        if container is None:
+            return None
+
+        res = []
+        for elem in container.select("li > a"):
+            res.append(str(elem.text).strip())
+
+        return tuple(res)
+
+    def _scrape_jerseys(self) -> typing.Tuple[_Jersey]:
+        """
+        :return:
+        """
+        container = self.soup.select_one("div#info > div.uni_holder.br")
+
+        res = []
+        for elem in container.select("a.poptip"):
+            number = int(elem.select_one("svg > text").text.strip())
+            team = re.search(
+                r"^\d{4}-\d{4} (.*)$", elem.attrs.get("data-tip").strip()
+            ).group(1)
+            years = tuple(
+                map(int, re.findall(r"\d{4}", elem.attrs.get("data-tip")))
+            )
+
+            res.append(
+                self._Jersey(number=number, team=team, years=years)
+            )
+
+        return tuple(res)
+
+    def _scrape_stats_pullout(self) -> pd.DataFrame:
+        """
+        :return:
+        """
+        container = self.soup.select_one("div#info > div.stats_pullout")
+        df_ = pd.DataFrame(
+            columns=[
+                e.text.strip() for e in container.select("span.poptip > strong")
+            ],
+            index=[
+                e.text.strip() for e in container.select("div:nth-child(1) > div > p > strong")
+            ]
+        )
+
+        for i, elem in enumerate(container.select("div.p1 > div, div.p2 > div, div.p3 > div")):
+            df_.iloc[:, i] = list(map(float, (e.text.strip() for e in elem.select("p"))))
+
+        return df_
+
+    def meta(self) -> _Meta:
+        """
+        :return:
+        """
+        return self._meta
+
+    def accolades(self) -> typing.Optional[typing.Tuple[str]]:
+        """
+        :return:
+        """
+        return self._accolades
+
+    def jerseys(self) -> typing.Tuple[_Jersey]:
+        """
+        :return:
+        """
+        return self._jerseys
+
+    def stats_pullout(self) -> pd.DataFrame:
+        """
+        :return:
+        """
+        return self._stats_pullout
+
+    @property
+    def batting_overview(self) -> _BattingOverview:
+        """
+
+        """
+        return self._batting_overview

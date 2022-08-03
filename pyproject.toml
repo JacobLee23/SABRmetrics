@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sabrmetrics"
+version = "0.0.1"
+description = "A web scraper for SABRmetrics websites"
+readme = "README.md"
+authors = [ { name = "Jacob Lee", email = "Jacob.J.Lee@outlook.com" } ]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.6"
+
+[project.urls]
+homepage = "https://github.com/JacobLee23/SABRmetrics"

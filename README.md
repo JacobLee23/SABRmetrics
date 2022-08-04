@@ -1,4 +1,4 @@
-# SABERmetrics
+# SABRmetrics
 
 ![GitHub](https://img.shields.io/github/license/JacobLee23/SABRmetrics)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/SABRmetrics)

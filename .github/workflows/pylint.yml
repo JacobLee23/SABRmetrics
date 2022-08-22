@@ -10,27 +10,18 @@ jobs:
         python-version: [ "3.6", "3.7", "3.8", "3.9", "3.10" ]
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install pip
-      run: |
-        python -m pip install --upgrade pip
-    - name: Install pipenv
-      run: |
-        python -m pip install --upgrade pipenv
-    - name: Generate requirements from Pipfile
-      run: |
-        pipenv requirements > sabrmetrics/requirements.txt
+    
     - name: Install dependencies
-      run: |
-        pip install -r sabrmetrics/requirements.txt
-        pipenv install pylint
-        pipenv install vermin
-    - name: Analysing code with vermin
-      run: |
-        vermin sabrmetrics/
-    - name: Analysing the code with pylint
-      run: |
-        pylint sabrmetrics/
+      uses: VaultVulp/action-pipenv@v2.0.1
+      with:
+        command: install -d
+        
+    - name: Vermin
+      uses: VaultVulp/action-pipenv@v2.0.1
+      with:
+        command: run vermin
+        
+    - name: Pylint
+      uses: VaultVulp/action-pipenv@v2.0.1
+      with:
+        command: run pylint

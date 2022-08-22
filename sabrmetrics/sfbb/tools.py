@@ -2,6 +2,7 @@
 
 """
 
+import bs4
 import requests
 
 from sabrmetrics.sfbb._headers import HEADERS
@@ -29,3 +30,11 @@ class PlayerIDMap:
         :return:
         """
         return requests.get(URL, headers=self.headers)
+
+    @property
+    def soup(self) -> bs4.BeautifulSoup:
+        """
+
+        :return:
+        """
+        return bs4.BeautifulSoup(self.response.text, features="lxml")

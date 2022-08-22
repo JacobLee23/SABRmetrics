@@ -35,3 +35,10 @@ class TestPlayerIDMap:
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.response`.
         """
         assert self.x.response.status_code == 200
+
+    def test_soup(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlyaerIDMap.soup`.
+        """
+        assert self.x.soup
+        assert self.x.soup.select_one("html")

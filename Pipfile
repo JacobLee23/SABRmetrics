@@ -14,6 +14,7 @@ sphinx = "*"
 build = "*"
 twine = "*"
 pytest-html = "*"
+vermin = "*"
 
 [requires]
 python_version = "3.10"

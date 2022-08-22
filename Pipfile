@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
+beautifulsoup4 = "*"
 
 [dev-packages]
 pytest = "*"

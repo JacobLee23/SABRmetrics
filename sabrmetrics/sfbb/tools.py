@@ -29,4 +29,3 @@ class PlayerIDMap:
         :return:
         """
         return requests.get(URL, headers=self.headers)
-

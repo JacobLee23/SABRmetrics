@@ -14,12 +14,14 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Set up Pipenv
+    - name: Install pip
       run: |
         python -m pip install --upgrade pip
-    - name: Generate requirements from Pipfile
+    - name: Install pipenv
       run: |
         python -m pip install --upgrade pipenv
+    - name: Generate requirements from Pipfile
+      run: |
         pipenv requirements > requirements.txt
     - name: Install dependencies
       run: |

@@ -13,6 +13,7 @@ pytest = "*"
 sphinx = "*"
 build = "*"
 twine = "*"
+pytest-html = "*"
 
 [requires]
 python_version = "3.10"

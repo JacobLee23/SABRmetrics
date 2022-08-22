@@ -10,6 +10,8 @@ beautifulsoup4 = "*"
 [dev-packages]
 pytest = "*"
 sphinx = "*"
+build = "*"
+twine = "*"
 
 [requires]
 python_version = "3.10"

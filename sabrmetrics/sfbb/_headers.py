@@ -19,7 +19,7 @@ class Headers:
         return pathlib.Path("sabrmetrics", "sfbb", "data", "headers.json")
 
     @property
-    def content(self) -> dict:
+    def content(self) -> dict[str, str]:
         """
 
         :return:

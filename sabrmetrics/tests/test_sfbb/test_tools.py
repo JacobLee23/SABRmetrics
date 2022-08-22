@@ -38,7 +38,17 @@ class TestPlayerIDMap:
 
     def test_soup(self):
         """
-        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlyaerIDMap.soup`.
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.soup`.
         """
         assert self.x.soup
         assert self.x.soup.select_one("html")
+
+    def test_id_maps(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.id_maps`.
+        """
+        assert self.x.id_maps
+        assert len(self.x.id_maps) == 5
+        for url in self.x.id_maps._asdict().values():
+            with requests.get(url, headers=self.x.headers) as response:
+                assert response.status_code == 200

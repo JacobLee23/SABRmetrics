@@ -10,7 +10,7 @@ from sabrmetrics.sfbb import tools
 
 def test_url():
     """
-
+    Unit test for :py:data:`sabrmetrics.sfbb.tools.URL`.
     """
     with requests.get(tools.URL, headers=tools.HEADERS) as response:
         assert response.status_code == 200

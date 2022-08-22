@@ -22,10 +22,10 @@ jobs:
         python -m pip install --upgrade pipenv
     - name: Generate requirements from Pipfile
       run: |
-        pipenv requirements > requirements.txt
+        pipenv requirements > sabrmetrics/requirements.txt
     - name: Install dependencies
       run: |
-        pip install -r $(pipenv requirements)
+        pip install -r sabrmetrics/requirements.txt
         pipenv install pylint
         pipenv install vermin
     - name: Analysing code with vermin

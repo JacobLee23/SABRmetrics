@@ -4,9 +4,24 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+requests = "*"
+beautifulsoup4 = "*"
+lxml = "*"
 
 [dev-packages]
 pytest = "*"
+sphinx = "*"
+build = "*"
+twine = "*"
+pytest-html = "*"
+vermin = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.10"
+
+[scripts]
+pylint = "python -m pylint sabrmetrics/ --ignore=sabrmetrics/tests/"
+pytest = "python -m pytest sabrmetrics/tests/"
+pytest-html = "python -m pytest sabrmetrics/tests/ --html=\"report.html\" --self-contained-html"
+vermin = "vermin -vvv sabrmetrics/"

@@ -12,10 +12,12 @@ Scraper for the `Tools`_ page of the **Smart Fantasy Baseball** website.
 .. _Tools: https://smartfantasybaseball.com/tools/
 """
 
+import datetime
 import pathlib
 import typing
 
 import bs4
+import pandas as pd
 import requests
 
 from sabrmetrics.sfbb._headers import HEADERS
@@ -28,6 +30,14 @@ class PlayerIDMap:
     """
     Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
     """
+
+    _changelog_colmap = {
+        "DATE": "Date",
+        "DESCRIPTION OF CHANGE": "Description",
+    }
+    _changelog_columns = [
+        "Date", "Description"
+    ]
 
     class IDMaps(typing.NamedTuple):
         """
@@ -110,6 +120,64 @@ class PlayerIDMap:
             webview=hyperlinks[1], excel_download=hyperlinks[0], csv_download=hyperlinks[2],
             changelog_webview=hyperlinks[3], changelog_csv_download=hyperlinks[4]
         )
+
+    @property
+    def _changelog_table(self) -> bs4.Tag:
+        """
+        Scrapes the ``<table>`` element that corresponds to the Player ID Map CHANGELOG table.
+
+        :return: The ``<table>`` element of the CHANGELOG table
+        """
+        css = "div#sheets-viewport div.grid-container table"
+
+        with requests.get(self.id_maps.changelog_webview, headers=self.headers) as response:
+            soup = bs4.BeautifulSoup(response.text, features="lxml")
+
+        return soup.select_one(css)
+
+    @property
+    def _changelog_dataframe(self) -> pd.DataFrame:
+        """
+        Parses the CHANGELOG ``<table>`` element.
+        The inner HTML of the ``<table>`` element is read and processed as a ``DataFrame``.
+
+        :return: The ``DataFrame`` representation of the CHANGELOG table
+        """
+        dataframes = pd.read_html(str(self._changelog_table))
+
+        df = dataframes[0].iloc[1:, 1:].copy()
+        df.columns = dataframes[0].iloc[0, 1:]
+        return df
+
+    @property
+    def changelog(self) -> pd.DataFrame:
+        """
+        Scrapes, reads, and processes the Player ID Map `CHANGELOG`_ table.
+
+        The ``DataFrame`` columns are renamed and reordered according to pre-defined operations.
+        Additionally, type modifications are performed on selected columns, listed below:
+
+        +-------------+---------------+-----------------------+
+        | Name        | Old ``dtype`` | New ``dtype``         |
+        +=============+===============+=======================+
+        | Date        | ``str``       | ``datetime.datetime`` |
+        +-------------+---------------+-----------------------+
+        | Description | ``str``       | ``str``               |
+        +-------------+---------------+-----------------------+
+
+        :return: A ``DataFrame`` representation of the Player ID Map CHANGELOG
+
+        .. _CHANGELOG: https://www.smartfantasybaseball.com/PLAYERIDMAPCHANGELOG
+        """
+        df = self._changelog_dataframe
+        df.rename(columns=self._changelog_colmap, inplace=True)
+        df = df[self._changelog_columns]
+
+        df["Date"] = df["Date"].apply(
+            lambda x: datetime.datetime.strptime(x, "%m/%d/%Y")
+        )
+
+        return df
 
     def download_excel(self, dest: typing.Union[str, pathlib.Path]) -> pathlib.Path:
         """

@@ -131,3 +131,24 @@ class PlayerIDMap:
             file.write(response.content)
 
         return path
+
+    def download_csv(self, dest: typing.Union[str, pathlib.Path]) -> pathlib.Path:
+        """
+        Writes the content of the Player ID Map CSV to a file.
+        The location of the generated file is determined by ``dest``.
+
+        :param dest: The file path to which the Player ID Map
+        :return: The file path to the created file
+        :raise ValueError: Invalid file type of ``dest``
+        """
+        path = pathlib.Path(dest)
+        if path.suffix != ".csv":
+            raise ValueError(
+                f"Expected file extension '.csv' (Received '{path.suffix}')"
+            )
+
+        response = requests.get(self.id_maps.excel_download, headers=HEADERS)
+        with open(path, "wb") as file:
+            file.write(response.content)
+
+        return path

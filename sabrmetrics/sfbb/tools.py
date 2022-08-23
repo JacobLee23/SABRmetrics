@@ -13,10 +13,13 @@ Scraper for the `Tools`_ page of the **Smart Fantasy Baseball** website.
 """
 
 import datetime
+import math
 import pathlib
 import typing
 
 import bs4
+import dateutil.parser
+import numpy as np
 import pandas as pd
 import requests
 
@@ -108,6 +111,11 @@ class PlayerIDMap:
     }
     _changelog_columns = [
         "Date", "Description"
+    ]
+
+    _integer_columns = [
+        "BaseballHQID", "BaseballProspectusID", "CBSID", "ESPNID", "FanDuelID",
+        "MLBID", "NFBCID", "OttoneuID", "RotoWireID", "YahooID"
     ]
 
     class IDMaps(typing.NamedTuple):
@@ -217,7 +225,8 @@ class PlayerIDMap:
         dataframes = pd.read_html(str(self._playeridmap_table))
 
         df = pd.concat(
-            [dataframes[0].iloc[2:, 1:9].copy(), dataframes[0].iloc[2:, 10:].copy()]
+            [dataframes[0].iloc[2:, 1:9].copy(), dataframes[0].iloc[2:, 10:].copy()],
+            axis=1
         )
         df.columns = pd.concat(
             [dataframes[0].iloc[0, 1:9], dataframes[0].iloc[0, 10:]]
@@ -231,8 +240,29 @@ class PlayerIDMap:
         :return:
         """
         df = self._playeridmap_dataframe
+
+        # Modify `DataFrame` columns
         df.rename(columns=self._playeridmap_colmap, inplace=True)
-        df = df[self._playeridmap_columns]
+        df = df[self._playeridmap_columns]      # Reorder columns
+
+        df["Birthdate"] = df["Birthdate"].apply(
+            # Strings adhere to either a '%m/%d/%Y' or '%m/%d/%y' date format.
+            # Creating a `datetime.datetime` object from the string would require `try`/`except`.
+            # Instead, we assume that the date format is common and parseable by `dateutil`.
+            lambda x: dateutil.parser.parse(x)
+        )
+        df["AllPositions"] = df["AllPositions"].apply(
+            lambda x: x.split("/")
+        )
+        df["Active"] = df["Active"].apply(
+            lambda x: x == "Y"
+        )
+        df["FanGraphsID"] = df["FanGraphsID"].apply(
+            lambda x: x if isinstance(x, str) else (np.nan if math.isnan(x) else int(x))
+        )
+        df[self._integer_columns] = df[self._integer_columns].applymap(
+            lambda x: 0 if math.isnan(float(x)) else int(x)
+        )
 
         return df
 

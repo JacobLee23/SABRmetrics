@@ -2,6 +2,7 @@
 Tests for :py:mod:`sabrmetrics.sfbb.tools`.
 """
 
+import datetime
 import os
 import pathlib
 
@@ -74,19 +75,36 @@ class TestPlayerIDMap:
         df = self.x._playeridmap_dataframe
         assert len(df.columns) == len(self.x._playeridmap_colmap.keys())
         assert set(df.columns) == set(self.x._playeridmap_colmap.keys())
+
+        assert not df.isna().all().any()            # Check for columns of exclusively NaN
         assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
 
     def test_playeridmap(self):
         """
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.playeridmap`.
         """
-        assert len(self.x._playeridmap_colmap) == len(self.x._playeridmap_columns)
+        # Check that the dictionary of column mappings matches with the column ordering
         assert set(self.x._playeridmap_colmap.values()) == set(self.x._playeridmap_columns)
+        assert len(self.x._playeridmap_colmap) == len(self.x._playeridmap_columns)
 
+        # Check that the `DataFrame` columns match with the column ordering
         playeridmap = self.x.playeridmap
-        assert len(playeridmap.columns) == len(self.x._playeridmap_columns)
         assert set(playeridmap.columns) == set(self.x._playeridmap_columns)
-        assert not playeridmap.isna().all(axis=1).any()  # Check for rows of exclusively NaN
+        assert len(playeridmap.columns) == len(self.x._playeridmap_columns)
+        assert list(playeridmap.columns) == list(self.x._playeridmap_columns)
+
+        # Check that no columns or rows are exclusively NaN
+        assert not playeridmap.isna().all().any()
+        assert not playeridmap.isna().all(axis=1).any()
+
+        # Check `dtype` of column values
+        assert all(isinstance(x, datetime.datetime) for x in playeridmap["Birthdate"])
+        assert all(isinstance(x, list) for x in playeridmap["AllPositions"])
+        assert all(isinstance(x, bool) for x in playeridmap["Active"])
+        assert all(
+            all(isinstance(x, int) for x in playeridmap[c])
+            for c in self.x._integer_columns
+        )
 
     def test_changelog_table(self):
         """
@@ -105,6 +123,8 @@ class TestPlayerIDMap:
         df = self.x._changelog_dataframe
         assert len(df.columns) == len(self.x._changelog_colmap.keys())
         assert set(df.columns) == set(self.x._changelog_colmap.keys())
+
+        assert not df.isna().all().any()            # Check for columns of exclusively NaN
         assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
 
     def test_changelog(self):
@@ -117,6 +137,8 @@ class TestPlayerIDMap:
         changelog = self.x.changelog
         assert len(changelog.columns) == len(self.x._changelog_columns)
         assert set(changelog.columns) == set(self.x._changelog_columns)
+
+        assert not changelog.isna().all().any()             # Check for columns of exclusively NaN
         assert not changelog.isna().all(axis=1).any()       # Check for rows of exclusively NaN
 
     @pytest.mark.parametrize(

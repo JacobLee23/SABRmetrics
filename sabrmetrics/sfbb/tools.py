@@ -124,8 +124,9 @@ class PlayerIDMap:
     @property
     def _changelog_table(self) -> bs4.Tag:
         """
+        Scrapes the ``<table>`` element that corresponds to the Player ID Map CHANGELOG table.
 
-        :return:
+        :return: The ``<table>`` element of the CHANGELOG table
         """
         css = "div#sheets-viewport div.grid-container table"
 
@@ -137,8 +138,10 @@ class PlayerIDMap:
     @property
     def _changelog_dataframe(self) -> pd.DataFrame:
         """
+        Parses the CHANGELOG ``<table>`` element.
+        The inner HTML of the ``<table>`` element is read and processed as a ``DataFrame``.
 
-        :return:
+        :return: The ``DataFrame`` representation of the CHANGELOG table
         """
         dataframes = pd.read_html(str(self._changelog_table))
 
@@ -149,8 +152,22 @@ class PlayerIDMap:
     @property
     def changelog(self) -> pd.DataFrame:
         """
+        Scrapes, reads, and processes the Player ID Map `CHANGELOG`_ table.
 
-        :return:
+        The ``DataFrame`` columns are renamed and reordered according to pre-defined operations.
+        Additionally, type modifications are performed on selected columns, listed below:
+
+        +-------------+---------------+-----------------------+
+        | Name        | Old ``dtype`` | New ``dtype``         |
+        +=============+===============+=======================+
+        | Date        | ``str``       | ``datetime.datetime`` |
+        +-------------+---------------+-----------------------+
+        | Description | ``str``       | ``str``               |
+        +-------------+---------------+-----------------------+
+
+        :return: A ``DataFrame`` representation of the Player ID Map CHANGELOG
+
+        .. _CHANGELOG: https://www.smartfantasybaseball.com/PLAYERIDMAPCHANGELOG
         """
         df = self._changelog_dataframe
         df.rename(columns=self._changelog_colmap, inplace=True)

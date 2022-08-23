@@ -31,6 +31,77 @@ class PlayerIDMap:
     Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
     """
 
+    _playeridmap_colmap = {
+        "IDPLAYER": "PlayerID",
+        "PLAYERNAME": "Name",
+        "BIRTHDATE": "Birthdate",
+        "FIRSTNAME": "FirstName",
+        "LASTNAME": "LastName",
+        "TEAM": "Team",
+        "LG": "League",
+        "POS": "Position",
+        "IDFANGRAPHS": "FanGraphsID",
+        "FANGRAPHSNAME": "FanGraphsName",
+        "MLBID": "MLBID",
+        "MLBNAME": "MLBName",
+        "CBSID": "CBSID",
+        "CBSNAME": "CBSName",
+        "RETROID": "RetrosheetID",
+        "BREFID": "BaseballReferenceID",
+        "NFBCID": "NFBCID",
+        "NFBCNAME": "NFBCName",
+        "ESPNID": "ESPNID",
+        "ESPNNAME": "ESPNName",
+        "KFFLNAME": "KFFLName",
+        "DAVENPORTID": "ClayDavenportID",
+        "BPID": "BaseballProspectusID",
+        "YAHOOID": "YahooID",
+        "YAHOONAME": "YahooName",
+        "MSTRBLLNAME": "MasterballName",
+        "BATS": "Bats",
+        "THROWS": "Throws",
+        "FANTPROSNAME": "FantasyProsName",
+        "LASTCOMMAFIRST": "LastFirst",
+        "ROTOWIREID": "RotoWireID",
+        "FANDUELNAME": "FanDuelName",
+        "FANDUELID": "FanDuelID",
+        "DRAFTKINGSNAME": "DraftKingsName",
+        "OTTONEUID": "OttoneuID",
+        "HQID": "BaseballHQID",
+        "RAZZBALLNAME": "RazzballName",
+        "FANTRAXID": "FantraxID",
+        "FANTRAXNAME": "FantraxName",
+        "ROTOWIRENAME": "RotoWireName",
+        "ALLPOS": "AllPositions",
+        "NFBCLASTFIRST": "NFBCLastFirst",
+        "ACTIVE": "Active",
+    }
+    _playeridmap_columns = [
+        "PlayerID", "Name", "LastName", "FirstName", "LastFirst", "Birthdate",
+        "Team", "League", "Position", "AllPositions", "Bats", "Throws", "Active",
+
+        "BaseballHQID",
+        "BaseballProspectusID",
+        "BaseballReferenceID",
+        "ClayDavenportID",
+        "CBSID", "CBSName",
+        "DraftKingsName",
+        "ESPNID", "ESPNName",
+        "FanDuelID", "FanDuelName",
+        "FanGraphsID", "FanGraphsName",
+        "FantasyProsName",
+        "FantraxID", "FantraxName",
+        "KFFLName",
+        "MasterballName",
+        "MLBID", "MLBName",
+        "NFBCID", "NFBCName", "NFBCLastFirst",
+        "OttoneuID",
+        "RazzballName",
+        "RetrosheetID",
+        "RotoWireID", "RotoWireName",
+        "YahooID", "YahooName",
+    ]
+
     _changelog_colmap = {
         "DATE": "Date",
         "DESCRIPTION OF CHANGE": "Description",
@@ -120,6 +191,50 @@ class PlayerIDMap:
             webview=hyperlinks[1], excel_download=hyperlinks[0], csv_download=hyperlinks[2],
             changelog_webview=hyperlinks[3], changelog_csv_download=hyperlinks[4]
         )
+
+    @property
+    def _playeridmap_table(self) -> bs4.Tag:
+        """
+        Scrapes the ``<table>`` element that corresponds to the Player ID Map table.
+
+        :return: The ``<table>`` element on the Player ID Map table
+        """
+        css = "div#sheets-viewport div.grid-container table"
+
+        with requests.get(self.id_maps.webview, headers=self.headers) as response:
+            soup = bs4.BeautifulSoup(response.text, features="lxml")
+
+        return soup.select_one(css)
+
+    @property
+    def _playeridmap_dataframe(self) -> pd.DataFrame:
+        """
+        Parses the Player ID Map ``<table>`` element.
+        The inner HTML of the ``<table>`` element is read and processed as a ``DataFrame``.
+
+        :return: The ``DataFrame`` representation of the Player ID Map table
+        """
+        dataframes = pd.read_html(str(self._playeridmap_table))
+
+        df = pd.concat(
+            [dataframes[0].iloc[2:, 1:9].copy(), dataframes[0].iloc[2:, 10:].copy()]
+        )
+        df.columns = pd.concat(
+            [dataframes[0].iloc[0, 1:9], dataframes[0].iloc[0, 10:]]
+        )
+        return df
+
+    @property
+    def playeridmap(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        df = self._playeridmap_dataframe
+        df.rename(columns=self._playeridmap_colmap, inplace=True)
+        df = df[self._playeridmap_columns]
+
+        return df
 
     @property
     def _changelog_table(self) -> bs4.Tag:

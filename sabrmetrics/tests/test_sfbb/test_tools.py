@@ -57,6 +57,37 @@ class TestPlayerIDMap:
             with requests.get(url, headers=self.x.headers) as response:
                 assert response.status_code == 200
 
+    def test_playeridmap_table(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._playeridmap_table`.
+        """
+        table = self.x._playeridmap_table
+        assert table is not None
+
+        dataframes = pd.read_html(str(table))
+        assert len(dataframes) == 1
+
+    def test_playeridmap_dataframe(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._playeridmap_dataframe`.
+        """
+        df = self.x._playeridmap_dataframe
+        assert len(df.columns) == len(self.x._playeridmap_colmap.keys())
+        assert set(df.columns) == set(self.x._playeridmap_colmap.keys())
+        assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
+
+    def test_playeridmap(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.playeridmap`.
+        """
+        assert len(self.x._playeridmap_colmap) == len(self.x._playeridmap_columns)
+        assert set(self.x._playeridmap_colmap.values()) == set(self.x._playeridmap_columns)
+
+        playeridmap = self.x.playeridmap
+        assert len(playeridmap.columns) == len(self.x._playeridmap_columns)
+        assert set(playeridmap.columns) == set(self.x._playeridmap_columns)
+        assert not playeridmap.isna().all(axis=1).any()  # Check for rows of exclusively NaN
+
     def test_changelog_table(self):
         """
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._changelog_table`.

@@ -19,12 +19,10 @@ import typing
 
 import bs4
 import dateutil.parser
-import numpy as np
 import pandas as pd
 import requests
 
 from sabrmetrics.sfbb._headers import HEADERS
-
 
 URL = "https://www.smartfantasybaseball.com/tools/"
 
@@ -34,6 +32,8 @@ class PlayerIDMap:
     Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
     """
 
+    # Maps the original Player ID Map `DataFrame` column names to the column names of the
+    # `DataFrame` returned by :py:attr:`PlayerIDMap.playeridmap`.
     _playeridmap_colmap = {
         "IDPLAYER": "PlayerID", "PLAYERNAME": "Name", "BIRTHDATE": "Birthdate",
         "FIRSTNAME": "FirstName", "LASTNAME": "LastName", "TEAM": "Team",
@@ -51,6 +51,8 @@ class PlayerIDMap:
         "ROTOWIRENAME": "RotoWireName", "ALLPOS": "AllPositions", "NFBCLASTFIRST": "NFBCLastFirst",
         "ACTIVE": "Active",
     }
+    # Determines the order of the columns of the `DataFrame` returned by
+    # :py:attr:`PlayerIDMap.playeridmap`.
     _playeridmap_columns = [
         "PlayerID", "Name", "LastName", "FirstName", "LastFirst",
         "Birthdate", "Team", "League", "Position", "AllPositions",
@@ -64,13 +66,19 @@ class PlayerIDMap:
         "RetrosheetID", "RotoWireID", "RotoWireName", "YahooID", "YahooName",
     ]
 
+    # Maps the original Player ID Map CHANGELOG `DataFrame` column names to the column names of the
+    # `DataFrame` returned by :py:attr:`PlayerIDMap.changelog`.
     _changelog_colmap = {
         "DATE": "Date", "DESCRIPTION OF CHANGE": "Description",
     }
+    # Determines the order of the columns of the `DataFrame` returned by
+    # :py:attr:`PlayerIDMap.changelog`.
     _changelog_columns = [
         "Date", "Description"
     ]
 
+    # Names of the columns of the `DataFrame` returned by :py:attr:`PlayerIDMap.playeridmap` that
+    # should be converted to type `int`.
     _integer_columns = [
         "BaseballHQID", "BaseballProspectusID", "CBSID", "ESPNID", "FanDuelID",
         "MLBID", "NFBCID", "OttoneuID", "RotoWireID", "YahooID"
@@ -118,21 +126,13 @@ class PlayerIDMap:
         changelog_csv_download: str
 
     @property
-    def headers(self) -> dict[str, str]:
-        """
-        :return: A dictionary of HTTP request headers
-        """
-        return HEADERS
-
-    @property
     def response(self) -> requests.Response:
         """
         Sends an HTTP GET request to :py:const:`URL`.
-        Uses the request headers defined by :py:attr:`Headers.headers`.
 
         :return: The browser response to the HTTP GET request
         """
-        return requests.get(URL, headers=self.headers)
+        return requests.get(URL, headers=HEADERS)
 
     @property
     def soup(self) -> bs4.BeautifulSoup:
@@ -150,8 +150,12 @@ class PlayerIDMap:
 
         :return: A :py:class:`PlayerIDMap.IDMaps` object containing the Player ID Map hyperlinks.
         """
+        # CSS selector of the anchor (`<a>`) elements in the 'Player ID Map' section of the Smart
+        # Fantasy Baseball 'Tools' webpage.
         css = "#content table tr:nth-of-type(2) td:nth-of-type(1) a"
 
+        # Get the Player ID Map viewing/download URLs from the 'href' attributes of the anchor
+        # (`<a>`) elements.
         hyperlinks = [e.attrs.get("href") for e in self.soup.select(css)]
         return self.IDMaps(
             webview=hyperlinks[1], excel_download=hyperlinks[0], csv_download=hyperlinks[2],
@@ -165,9 +169,12 @@ class PlayerIDMap:
 
         :return: The ``<table>`` element on the Player ID Map table
         """
+        # CSS selector of the table (`<table>`) element in the Player ID Map webview.
         css = "div#sheets-viewport div.grid-container table"
 
-        with requests.get(self.id_maps.webview, headers=self.headers) as response:
+        # Parse the browser HTML response to an HTTP GET request sent to the Player ID Map webview
+        # URL.
+        with requests.get(self.id_maps.webview, headers=HEADERS) as response:
             soup = bs4.BeautifulSoup(response.text, features="lxml")
 
         return soup.select_one(css)
@@ -180,8 +187,17 @@ class PlayerIDMap:
 
         :return: The ``DataFrame`` representation of the Player ID Map table
         """
+        # Generate `DataFrame` objects for each of the table (`<table>`) elements in the Player ID
+        # Map webview.
         dataframes = pd.read_html(str(self._playeridmap_table))
 
+        # Create a `DataFrame` object that represents the Player ID Map table.
+        #
+        # Note the following properties of the Player ID Map `DataFrame` representation:
+        # - The row at index 0 is a row of the table column names.
+        # - The row at index 1 is a divider and is processed as a row of NaN values.
+        # - The column at index 0 is a numbering of the table rows.
+        # - The column at index 9 is a divider and is processed as a column of NaN values.
         df = pd.concat(
             [dataframes[0].iloc[2:, 1:9].copy(), dataframes[0].iloc[2:, 10:].copy()],
             axis=1
@@ -189,35 +205,113 @@ class PlayerIDMap:
         df.columns = pd.concat(
             [dataframes[0].iloc[0, 1:9], dataframes[0].iloc[0, 10:]]
         )
+
         return df
 
     @property
     def playeridmap(self) -> pd.DataFrame:
         """
+        Scrapes, reads, and processes the `Player ID Map`_ table.
 
-        :return:
+        The ``DataFrame`` columns are renamed and reordered according to pre-defined operations.
+        Additionally, type modifications are performed on selected columns.
+        The types of the ``DataFrame`` values are listed below by column name:
+
+        +--------------+-----------------------+
+        | Name         | Type                  |
+        +==============+=======================+
+        | PlayerID     | ``str``               |
+        +--------------+-----------------------+
+        | Name         | ``str``               |
+        +--------------+-----------------------+
+        | LastName     | ``str``               |
+        +--------------+-----------------------+
+        | FirstName    | ``str``               |
+        +--------------+-----------------------+
+        | LastFirst    | ``str``               |
+        +--------------+-----------------------+
+        | Birthdate    | ``datetime.datetime`` |
+        +--------------+-----------------------+
+        | Team         | ``str``               |
+        +--------------+-----------------------+
+        | League       | ``str``               |
+        +--------------+-----------------------+
+        | Position     | ``str``               |
+        +--------------+-----------------------+
+        | AllPositions | ``list[str]``         |
+        +--------------+-----------------------+
+        | Bats         | ``str``               |
+        +--------------+-----------------------+
+        | Throws       | ``str``               |
+        +--------------+-----------------------+
+        | Active       | ``bool``              |
+        +--------------+-----------------------+
+
+        Furthermore, the ``DataFrame`` values of the SABRmetrics website columns are listed below:
+
+        - ``int``:
+            - BaseballHQID
+            - BaseballProspectusID
+            - CBSID
+            - ESPNID
+            - FanDuelID
+            - MLBID
+            - NFBCID
+            - OttoneuID
+            - RotoWireID
+            - YahooID
+        - ``str``:
+            - BaseballReferenceID
+            - ClayDaveportID
+            - CBSName
+            - DraftKingsName
+            - ESPNName
+            - FanDuelName
+            - FanGraphsID
+            - FanGraphsName
+            - FantasyProsName
+            - FanTraxID
+            - FanTraxName
+            - KFFLName
+            - MasterballName
+            - MLBName
+            - NFBCName
+            - NFBCLastFirst
+            - OttoneuID
+            - RazzballName
+            - RetrosheetID
+            - RotoWireName
+            - YahooName
+
+        _Note: All values of the ``DataFrame`` are initially of type ``str``._
+
+        :return: A ``DataFrame`` representation of the Player ID Map
+
+        .. _Player ID Map: https://www.smartfantasybaseball.com/PLAYERIDMAPWEB
         """
         df = self._playeridmap_dataframe
 
         # Modify `DataFrame` columns
         df.rename(columns=self._playeridmap_colmap, inplace=True)
-        df = df[self._playeridmap_columns]      # Reorder columns
+        df = df[self._playeridmap_columns]
 
+        # `str` -> `datetime.datetime`
+        #
+        # Strings adhere to either a '%m/%d/%Y' or '%m/%d/%y' date format.
+        # Creating a `datetime.datetime` object from the string would require a `try`/`except`.
+        # Instead, we assume that the date format is common and parseable by `dateutil`.
         df["Birthdate"] = df["Birthdate"].apply(
-            # Strings adhere to either a '%m/%d/%Y' or '%m/%d/%y' date format.
-            # Creating a `datetime.datetime` object from the string would require `try`/`except`.
-            # Instead, we assume that the date format is common and parseable by `dateutil`.
             lambda x: dateutil.parser.parse(x)
         )
+        # `str` -> `list[str]`
         df["AllPositions"] = df["AllPositions"].apply(
             lambda x: x.split("/")
         )
+        # `str` -> `bool`
         df["Active"] = df["Active"].apply(
             lambda x: x == "Y"
         )
-        df["FanGraphsID"] = df["FanGraphsID"].apply(
-            lambda x: x if isinstance(x, str) else (np.nan if math.isnan(x) else int(x))
-        )
+        # `str` -> `int`
         df[self._integer_columns] = df[self._integer_columns].applymap(
             lambda x: 0 if math.isnan(float(x)) else int(x)
         )
@@ -231,9 +325,12 @@ class PlayerIDMap:
 
         :return: The ``<table>`` element of the CHANGELOG table
         """
+        # CSS selector of the table (`<table>`) element in the Player ID Map CHANGELOG webview.
         css = "div#sheets-viewport div.grid-container table"
 
-        with requests.get(self.id_maps.changelog_webview, headers=self.headers) as response:
+        # Parse the browser HTML response to an HTTP GET request sent to the Player ID Map
+        # CHANGELOG webview URL.
+        with requests.get(self.id_maps.changelog_webview, headers=HEADERS) as response:
             soup = bs4.BeautifulSoup(response.text, features="lxml")
 
         return soup.select_one(css)
@@ -246,10 +343,18 @@ class PlayerIDMap:
 
         :return: The ``DataFrame`` representation of the CHANGELOG table
         """
+        # Generate `DataFrame` objects for each of the table (`<table>`) elements in the Player ID
+        # Map CHANGELOG webview.
         dataframes = pd.read_html(str(self._changelog_table))
 
+        # Create a `DataFrame` object that represents the Player ID Map table.
+        #
+        # Note the following properties of the Player ID Map `DataFrame` representation:
+        # - The row at index 0 is a row of the table column names.
+        # - The column at index 0 is a numbering of the table rows.
         df = dataframes[0].iloc[1:, 1:].copy()
         df.columns = dataframes[0].iloc[0, 1:]
+
         return df
 
     @property
@@ -258,24 +363,30 @@ class PlayerIDMap:
         Scrapes, reads, and processes the Player ID Map `CHANGELOG`_ table.
 
         The ``DataFrame`` columns are renamed and reordered according to pre-defined operations.
-        Additionally, type modifications are performed on selected columns, listed below:
+        Additionally, type modifications are performed on selected columns.
+        The types of the ``DataFrame`` values are listed below by column name:
 
-        +-------------+---------------+-----------------------+
-        | Name        | Old ``dtype`` | New ``dtype``         |
-        +=============+===============+=======================+
-        | Date        | ``str``       | ``datetime.datetime`` |
-        +-------------+---------------+-----------------------+
-        | Description | ``str``       | ``str``               |
-        +-------------+---------------+-----------------------+
+        +-------------+-------------------------+
+        | Name        | Type                    |
+        +=============+=========================+
+        | Date        | ``datetime.datetime`` * |
+        +-------------+-------------------------+
+        | Description | ``str``                 |
+        +-------------+-------------------------+
+
+        _Note: All values of the ``DataFrame`` are initially of type ``str``._
 
         :return: A ``DataFrame`` representation of the Player ID Map CHANGELOG
 
         .. _CHANGELOG: https://www.smartfantasybaseball.com/PLAYERIDMAPCHANGELOG
         """
         df = self._changelog_dataframe
+
+        # Modify `DataFrame` columns
         df.rename(columns=self._changelog_colmap, inplace=True)
         df = df[self._changelog_columns]
 
+        # `str` -> `datetime.datetime`
         df["Date"] = df["Date"].apply(
             lambda x: datetime.datetime.strptime(x, "%m/%d/%Y")
         )
@@ -292,14 +403,20 @@ class PlayerIDMap:
         :raise ValueError: Invalid file type of ``dest``
         """
         path = pathlib.Path(dest)
+
+        # Check that the destination file type corresponds to an Excel Workbook.
         if path.suffix != ".xlsx":
             raise ValueError(
                 f"Expected file extension '.xlsx' (Received '{path.suffix}')"
             )
 
-        response = requests.get(self.id_maps.excel_download, headers=HEADERS)
-        with open(path, "wb") as file:
-            file.write(response.content)
+        # Send HTTP GET request to the URL address that downloads the Player ID Map as an Excel
+        # Workbook.
+        with requests.get(self.id_maps.excel_download, headers=HEADERS) as response:
+            # Create/Open Excel Workbook at destination.
+            with open(path, "wb") as file:
+                # Write browser binary response to destination file.
+                file.write(response.content)
 
         return path
 
@@ -313,14 +430,19 @@ class PlayerIDMap:
         :raise ValueError: Invalid file type of ``dest``
         """
         path = pathlib.Path(dest)
+
+        # Check that the destination file type corresponds to a CSV file.
         if path.suffix != ".csv":
             raise ValueError(
                 f"Expected file extension '.csv' (Received '{path.suffix}')"
             )
 
-        response = requests.get(self.id_maps.csv_download, headers=HEADERS)
-        with open(path, "wb") as file:
-            file.write(response.content)
+        # Send HTTP GET request to the URL address that downloads the Player ID Map as a CSV file.
+        with requests.get(self.id_maps.csv_download, headers=HEADERS) as response:
+            # Create/Open CSV file at destination.
+            with open(path, "wb") as file:
+                # Write browser binary response to destination file.
+                file.write(response.content)
 
         return path
 
@@ -334,13 +456,19 @@ class PlayerIDMap:
         :raise ValueError: Invalid file type of ``dest``
         """
         path = pathlib.Path(dest)
+
+        # Check that the destination file type corresponds to a CSV file.
         if path.suffix != ".csv":
             raise ValueError(
                 f"Expected file extension '.csv' (Received '{path.suffix}')"
             )
 
-        response = requests.get(self.id_maps.changelog_csv_download, headers=HEADERS)
-        with open(path, "wb") as file:
-            file.write(response.content)
+        # Send HTTP GET request to the URL address that downloads the Player ID Map CHANGELOG as a
+        # CSV file.
+        with requests.get(self.id_maps.changelog_csv_download, headers=HEADERS) as response:
+            # Create/Open CSV file at destination.
+            with open(path, "wb") as file:
+                # Write browser binary response to destination file.
+                file.write(response.content)
 
         return path

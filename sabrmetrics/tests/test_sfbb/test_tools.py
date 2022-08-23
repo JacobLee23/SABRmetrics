@@ -2,6 +2,9 @@
 Tests for :py:mod:`sabrmetrics.sfbb.tools`.
 """
 
+import os
+import pathlib
+
 import pytest
 import requests
 
@@ -52,3 +55,17 @@ class TestPlayerIDMap:
         for url in self.x.id_maps._asdict().values():
             with requests.get(url, headers=self.x.headers) as response:
                 assert response.status_code == 200
+
+    @pytest.mark.parametrize(
+        "dest", [
+            pathlib.Path(".", "PlayerIDMap.xlsx")
+        ]
+    )
+    def test_download_excel(self, dest: pathlib.Path):
+        """
+        Unit test for :py:meth:`sabrmetrics.sfbb.tools.PlayerIDMap.download_excel`.
+        """
+        path = self.x.download_excel(dest)
+        assert path == dest
+
+        os.remove(dest)

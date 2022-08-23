@@ -12,6 +12,7 @@ Scraper for the `Tools`_ page of the **Smart Fantasy Baseball** website.
 .. _Tools: https://smartfantasybaseball.com/tools/
 """
 
+import pathlib
 import typing
 
 import bs4
@@ -109,3 +110,24 @@ class PlayerIDMap:
             webview=hyperlinks[1], excel_download=hyperlinks[0], csv_download=hyperlinks[2],
             changelog_webview=hyperlinks[3], changelog_csv_download=hyperlinks[4]
         )
+
+    def download_excel(self, dest: typing.Union[str, pathlib.Path]) -> pathlib.Path:
+        """
+        Writes the content of the Player ID Map Excel Workbook to a file.
+        The location of the generated file is determined by ``dest``.
+
+        :param dest: The file path to which the Player ID Map
+        :return: The file path to the created file
+        :raise ValueError: Invalid file type of ``dest``
+        """
+        path = pathlib.Path(dest)
+        if path.suffix != ".xlsx":
+            raise ValueError(
+                f"Expected file extension '.xlsx' (Received '{path.suffix}')"
+            )
+
+        response = requests.get(self.id_maps.excel_download, headers=HEADERS)
+        with open(path, "wb") as file:
+            file.write(response.content)
+
+        return path

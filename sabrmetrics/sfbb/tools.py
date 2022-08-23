@@ -283,7 +283,7 @@ class PlayerIDMap:
             - RotoWireName
             - YahooName
 
-        _Note: All values of the ``DataFrame`` are initially of type ``str``._
+        *Note: All values of the ``DataFrame`` are initially of type ``str``.*
 
         :return: A ``DataFrame`` representation of the Player ID Map
 
@@ -374,7 +374,7 @@ class PlayerIDMap:
         | Description | ``str``                 |
         +-------------+-------------------------+
 
-        _Note: All values of the ``DataFrame`` are initially of type ``str``._
+        *Note: All values of the ``DataFrame`` are initially of type ``str``.*
 
         :return: A ``DataFrame`` representation of the Player ID Map CHANGELOG
 

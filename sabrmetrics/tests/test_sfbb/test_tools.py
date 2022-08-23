@@ -55,7 +55,7 @@ class TestPlayerIDMap:
         assert self.x.id_maps
         assert len(self.x.id_maps) == 5
         for url in self.x.id_maps._asdict().values():
-            with requests.get(url, headers=self.x.headers) as response:
+            with requests.get(url, headers=tools.HEADERS) as response:
                 assert response.status_code == 200
 
     def test_playeridmap_table(self):
@@ -73,11 +73,14 @@ class TestPlayerIDMap:
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._playeridmap_dataframe`.
         """
         df = self.x._playeridmap_dataframe
+
+        # Check that the `DataFrame` columns match the dictionary of column mappings
         assert len(df.columns) == len(self.x._playeridmap_colmap.keys())
         assert set(df.columns) == set(self.x._playeridmap_colmap.keys())
 
-        assert not df.isna().all().any()            # Check for columns of exclusively NaN
-        assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
+        # Check that no columns or rows are exclusively NaN
+        assert not df.isna().all().any()
+        assert not df.isna().all(axis=1).any()
 
     def test_playeridmap(self):
         """
@@ -121,25 +124,35 @@ class TestPlayerIDMap:
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._changelog_dataframe`.
         """
         df = self.x._changelog_dataframe
+
+        # Check that the `DataFrame` columns match the dictionary of column mappings
         assert len(df.columns) == len(self.x._changelog_colmap.keys())
         assert set(df.columns) == set(self.x._changelog_colmap.keys())
 
-        assert not df.isna().all().any()            # Check for columns of exclusively NaN
-        assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
+        # Check that no columns or rows are exclusively NaN
+        assert not df.isna().all().any()
+        assert not df.isna().all(axis=1).any()
 
     def test_changelog(self):
         """
         Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.changelog`.
         """
+        # Check that the dictionary of column mappings matches with the column ordering
         assert len(self.x._changelog_colmap) == len(self.x._changelog_columns)
         assert set(self.x._changelog_colmap.values()) == set(self.x._changelog_columns)
 
+        # Check that the `DataFrame` columns match with the column ordering
         changelog = self.x.changelog
         assert len(changelog.columns) == len(self.x._changelog_columns)
         assert set(changelog.columns) == set(self.x._changelog_columns)
+        assert list(changelog.columns) == list(self.x._changelog_columns)
 
-        assert not changelog.isna().all().any()             # Check for columns of exclusively NaN
-        assert not changelog.isna().all(axis=1).any()       # Check for rows of exclusively NaN
+        # Check that no columns or rows are exclusively NaN
+        assert not changelog.isna().all().any()
+        assert not changelog.isna().all(axis=1).any()
+
+        # Check `dtype` of column values
+        assert all(isinstance(x, datetime.datetime) for x in changelog["Date"])
 
     @pytest.mark.parametrize(
         "dest", [

@@ -116,7 +116,7 @@ class PlayerIDMap:
         Writes the content of the Player ID Map Excel Workbook to a file.
         The location of the generated file is determined by ``dest``.
 
-        :param dest: The file path to which the Player ID Map
+        :param dest: The file path to write the Player ID Map contents
         :return: The file path to the created file
         :raise ValueError: Invalid file type of ``dest``
         """
@@ -137,7 +137,7 @@ class PlayerIDMap:
         Writes the content of the Player ID Map CSV to a file.
         The location of the generated file is determined by ``dest``.
 
-        :param dest: The file path to which the Player ID Map
+        :param dest: The file path to write the Player ID Map contents
         :return: The file path to the created file
         :raise ValueError: Invalid file type of ``dest``
         """
@@ -148,6 +148,27 @@ class PlayerIDMap:
             )
 
         response = requests.get(self.id_maps.csv_download, headers=HEADERS)
+        with open(path, "wb") as file:
+            file.write(response.content)
+
+        return path
+
+    def download_changelog_csv(self, dest: typing.Union[str, pathlib.Path]) -> pathlib.Path:
+        """
+        Writes the content of the Player ID Map _CHANGELOG_ CSV to a file.
+        The location of the generated file is determined by ``dest``.
+
+        :param dest: The file path to write the Player ID Map _CHANGELOG_ contents
+        :return: The file path to the created file
+        :raise ValueError: Invalid file type of ``dest``
+        """
+        path = pathlib.Path(dest)
+        if path.suffix != ".csv":
+            raise ValueError(
+                f"Expected file extension '.csv' (Received '{path.suffix}')"
+            )
+
+        response = requests.get(self.id_maps.changelog_csv_download, headers=HEADERS)
         with open(path, "wb") as file:
             file.write(response.content)
 

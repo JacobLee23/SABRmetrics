@@ -83,3 +83,17 @@ class TestPlayerIDMap:
         assert path == dest
 
         os.remove(dest)
+
+    @pytest.mark.parametrize(
+        "dest", [
+            pathlib.Path(".", "PlayerIDMap_CHANGELOG.csv")
+        ]
+    )
+    def test_download_csv(self, dest: pathlib.Path):
+        """
+        Unit test for :py:meth:`sabrmetrics.sfbb.tools.PlayerIDMap.download_changelog_csv`.
+        """
+        path = self.x.download_changelog_csv(dest)
+        assert path == dest
+
+        os.remove(dest)

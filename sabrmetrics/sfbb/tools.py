@@ -12,6 +12,7 @@ Scraper for the `Tools`_ page of the **Smart Fantasy Baseball** website.
 .. _Tools: https://smartfantasybaseball.com/tools/
 """
 
+import datetime
 import pathlib
 import typing
 
@@ -154,6 +155,10 @@ class PlayerIDMap:
         df = self._changelog_dataframe
         df.rename(columns=self._changelog_colmap, inplace=True)
         df = df[self._changelog_columns]
+
+        df["Date"] = df["Date"].apply(
+            lambda x: datetime.datetime.strptime(x, "%m/%d/%Y")
+        )
 
         return df
 

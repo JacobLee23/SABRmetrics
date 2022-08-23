@@ -16,6 +16,7 @@ import pathlib
 import typing
 
 import bs4
+import pandas as pd
 import requests
 
 from sabrmetrics.sfbb._headers import HEADERS
@@ -28,6 +29,14 @@ class PlayerIDMap:
     """
     Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
     """
+
+    _changelog_colmap = {
+        "DATE": "Date",
+        "DESCRIPTION OF CHANGE": "Description",
+    }
+    _changelog_columns = [
+        "Date", "Description"
+    ]
 
     class IDMaps(typing.NamedTuple):
         """
@@ -110,6 +119,43 @@ class PlayerIDMap:
             webview=hyperlinks[1], excel_download=hyperlinks[0], csv_download=hyperlinks[2],
             changelog_webview=hyperlinks[3], changelog_csv_download=hyperlinks[4]
         )
+
+    @property
+    def _changelog_table(self) -> bs4.Tag:
+        """
+
+        :return:
+        """
+        css = "div#sheets-viewport div.grid-container table"
+
+        with requests.get(self.id_maps.changelog_webview, headers=self.headers) as response:
+            soup = bs4.BeautifulSoup(response.text, features="lxml")
+
+        return soup.select_one(css)
+
+    @property
+    def _changelog_dataframe(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        dataframes = pd.read_html(str(self._changelog_table))
+
+        df = dataframes[0].iloc[1:, 1:].copy()
+        df.columns = dataframes[0].iloc[0, 1:]
+        return df
+
+    @property
+    def changelog(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        df = self._changelog_dataframe
+        df.rename(columns=self._changelog_colmap, inplace=True)
+        df = df[self._changelog_columns]
+
+        return df
 
     def download_excel(self, dest: typing.Union[str, pathlib.Path]) -> pathlib.Path:
         """

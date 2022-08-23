@@ -5,6 +5,7 @@ Tests for :py:mod:`sabrmetrics.sfbb.tools`.
 import os
 import pathlib
 
+import pandas as pd
 import pytest
 import requests
 
@@ -55,6 +56,37 @@ class TestPlayerIDMap:
         for url in self.x.id_maps._asdict().values():
             with requests.get(url, headers=self.x.headers) as response:
                 assert response.status_code == 200
+
+    def test_changelog_table(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._changelog_table`.
+        """
+        table = self.x._changelog_table
+        assert table is not None
+
+        dataframes = pd.read_html(str(table))
+        assert len(dataframes) == 1
+
+    def test_changelog_dataframe(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap._changelog_dataframe`.
+        """
+        df = self.x._changelog_dataframe
+        assert len(df.columns) == len(self.x._changelog_colmap.keys())
+        assert set(df.columns) == set(self.x._changelog_colmap.keys())
+        assert not df.isna().all(axis=1).any()      # Check for rows of exclusively NaN
+
+    def test_changelog(self):
+        """
+        Unit test for :py:attr:`sabrmetrics.sfbb.tools.PlayerIDMap.changelog`.
+        """
+        assert len(self.x._changelog_colmap) == len(self.x._changelog_columns)
+        assert set(self.x._changelog_colmap.values()) == set(self.x._changelog_columns)
+
+        changelog = self.x.changelog
+        assert len(changelog.columns) == len(self.x._changelog_columns)
+        assert set(changelog.columns) == set(self.x._changelog_columns)
+        assert not changelog.isna().all(axis=1).any()       # Check for rows of exclusively NaN
 
     @pytest.mark.parametrize(
         "dest", [

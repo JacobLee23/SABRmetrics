@@ -17,7 +17,7 @@ Thus, the following HTTP request headers are set when making the GET request:
 The value of :py:data:`HEADERS` can be passed as the ``headers`` argument to ``requests.get()``:
 
  .. code-block:: python
- 
+
     >>> import requests
     >>> from sabrmetrics.sfbb._headers import HEADERS
     >>> requests.get("https://smartfantasybaseball.com/", headers=HEADERS)

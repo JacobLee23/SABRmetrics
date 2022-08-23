@@ -8,6 +8,8 @@ requests = "*"
 beautifulsoup4 = "*"
 lxml = "*"
 pandas = "*"
+python-dateutil = "*"
+numpy = "*"
 
 [dev-packages]
 pytest = "*"

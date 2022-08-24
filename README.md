@@ -14,7 +14,9 @@
   <a href="https://github.com/JacobLee23/SABRmetrics/releases/latest" target="_blank">
     <img src="https://img.shields.io/github/v/release/JacobLee23/SABRmetrics" alt="GitHub release (latest SemVer)">
   </a>
-  <img src="https://img.shields.io/github/v/tag/JacobLee23/SABRmetrics" alt="GitHub tag (latest SemVer)">
+  <a href="https://github.com/JacobLee23/SABRmetrics/tags" target="_blank">
+    <img src="https://img.shields.io/github/v/tag/JacobLee23/SABRmetrics" alt="GitHub tag (latest SemVer)">
+  </a>
 </div>
 <div>
   <img src="https://img.shields.io/github/languages/code-size/JacobLee23/SABRmetrics" alt="GitHub code size in bytes">

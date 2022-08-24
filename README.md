@@ -20,10 +20,10 @@
   <img src="https://img.shields.io/github/languages/code-size/JacobLee23/SABRmetrics" alt="GitHub code size in bytes">
   <img src="https://img.shields.io/github/directory-file-count/JacobLee23/SABRmetrics" alt="GitHub repo file count">
   <img src="https://img.shields.io/github/repo-size/JacobLee23/SABRmetrics" alt="GitHub repo size">
-</div>
-<div>
   <img src="https://img.shields.io/github/commit-activity/m/JacobLee23/SABRmetrics" alt="Commit Activity (Month)">
   <img src="https://img.shields.io/github/last-commit/JacobLee23/SABRmetrics" alt="Last Commit">
+</div>
+<div>
   <a href="https://github.com/JacobLee23/SABRmetrics/issues" target="_blank">
     <img src="https://img.shields.io/github/issues-raw/JacobLee23/SABRmetrics" alt="GitHub issues">
   </a>

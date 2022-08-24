@@ -353,7 +353,9 @@ class PlayerIDMap:
         # - The row at index 0 is a row of the table column names.
         # - The column at index 0 is a numbering of the table rows.
         df = dataframes[0].iloc[1:, 1:].copy()
-        df.columns = dataframes[0].iloc[0, 1:]
+        df.columns = list(dataframes[0].iloc[0, 1:])
+
+        df.reset_index(drop=True, inplace=True)
 
         return df
 

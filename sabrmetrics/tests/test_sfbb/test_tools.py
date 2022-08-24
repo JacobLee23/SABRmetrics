@@ -128,6 +128,9 @@ class TestPlayerIDMap:
         """
         df = self.x._changelog_dataframe
 
+        # Check the `DataFrame` index
+        assert list(df.index) == list(range(len(df.index)))
+
         # Check that the `DataFrame` columns match the dictionary of column mappings
         assert len(df.columns) == len(self.x._changelog_colmap.keys())
         assert set(df.columns) == set(self.x._changelog_colmap.keys())

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sabrmetrics"
-version = "0.3.3"
+version = "0.3.4"
 description = "A web scraper for SABRmetrics websites"
 readme = "README.md"
 authors = [ { name = "Jacob Lee", email = "Jacob.J.Lee@outlook.com" } ]

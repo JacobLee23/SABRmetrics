@@ -202,9 +202,9 @@ class PlayerIDMap:
             [dataframes[0].iloc[2:, 1:9].copy(), dataframes[0].iloc[2:, 10:].copy()],
             axis=1
         )
-        df.columns = pd.concat(
-            [dataframes[0].iloc[0, 1:9], dataframes[0].iloc[0, 10:]]
-        )
+        df.columns = [*dataframes[0].iloc[0, 1:9], *dataframes[0].iloc[0, 10:]]
+
+        df.reset_index(drop=True, inplace=True)
 
         return df
 

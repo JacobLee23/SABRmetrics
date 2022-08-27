@@ -262,8 +262,8 @@ class PlayerIDMap:
             - YahooID
         - ``str``:
             - BaseballReferenceID
-            - ClayDaveportID
             - CBSName
+            - ClayDaveportID
             - DraftKingsName
             - ESPNName
             - FanDuelName
@@ -277,7 +277,6 @@ class PlayerIDMap:
             - MLBName
             - NFBCName
             - NFBCLastFirst
-            - OttoneuID
             - RazzballName
             - RetrosheetID
             - RotoWireName

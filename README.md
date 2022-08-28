@@ -46,7 +46,7 @@
 
 ***
 
-Web scraping software for popular SABRmetrics websites.
+An open-source library of web-scraping software for popular SABRmetrics websites. 
 
 > Sabermetrics (or originally as SABRmetrics) is the empirical analysis of baseball, especially baseball statistics that measure in-game activity. 
 

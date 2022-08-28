@@ -11,10 +11,62 @@ import pandas as pd
 from sabrmetrics import sfbb
 
 
-class _SmartFantasyBaseball:
+class Flavor:
+    """
+
+    """
+    _name: str
+
+    _site_columns: dict[str, list[str]]
+
+    def __init__(self, pidmap: pd.DataFrame):
+        """
+
+        :param pidmap:
+        """
+        self._pidmap = pidmap
+
+    def __getitem__(self, item: str):
+        """
+
+        :param item:
+        :return:
+        """
+        columns: list[str] = self._site_columns[item]
+
+        return self.pidmap.loc[:, columns]
+
+    @property
+    def name(self) -> str:
+        """
+
+        :return:
+        """
+        return self._name
+
+    @property
+    def sites(self) -> tuple[str]:
+        """
+
+        :return:
+        """
+        return tuple(self._site_columns.keys())
+
+    @property
+    def pidmap(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._pidmap
+
+
+class _SmartFantasyBaseball(Flavor):
     """
     Wrapper for :py:class:`sabrmetrics.sfbb.tools.PlayerIDMap`.
     """
+    _name = "SmartFantasyBaseball"
+
     _site_columns: dict[str, list[str]] = {
         "BaseballHQ": ["BaseballHQ"],
         "BaseballProspectus": ["BaseballProspectus"],
@@ -43,30 +95,5 @@ class _SmartFantasyBaseball:
 
         """
         self._obj = sfbb.tools.PlayerIDMap()
-        self._pidmap: pd.DataFrame = self._obj.playeridmap
 
-    def __getitem__(self, item: str) -> pd.DataFrame:
-        """
-
-        :param item:
-        :return:
-        """
-        columns: list[str] = self._site_columns[item]
-
-        return self.pidmap.loc[:, columns]
-
-    @property
-    def pidmap(self) -> pd.DataFrame:
-        """
-
-        :return:
-        """
-        return self._pidmap
-
-    @property
-    def sites(self) -> tuple[str]:
-        """
-
-        :return:
-        """
-        return tuple(self._site_columns.keys())
+        super().__init__(self._obj.playeridmap)

@@ -43,3 +43,15 @@
     <img src="https://img.shields.io/github/issues-pr-closed-raw/JacobLee23/SABRmetrics" alt="GitHub closed pull requests">
   </a>
 </div>
+
+***
+
+Web scraping software for popular SABRmetrics websites.
+
+> Sabermetrics (or originally as SABRmetrics) is the empirical analysis of baseball, especially baseball statistics that measure in-game activity. 
+
+-- [Wikipedia](https://en.wikipedia.org/wiki/Sabermetrics)
+
+> sabermetrics, the statistical analysis of baseball data. Sabermetrics aims to quantify baseball players’ performances based on objective statistical measurements, especially in opposition to many of the established statistics (such as, for example, runs batted in and pitching wins) that give less accurate approximations of individual efficacy.
+
+-- [Britannica](https://www.britannica.com/sports/sabermetrics)

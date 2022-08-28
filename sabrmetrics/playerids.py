@@ -6,37 +6,40 @@ Wrapper for the various Player ID databases in the codebase.
 .. _Smart Fantasy Baseball: https://smartfantasybaseball.com/
 """
 
+import typing
+
 import pandas as pd
 
 from sabrmetrics import sfbb
 
 
-class Flavor:
+class _Flavor:
     """
 
     """
-    _name: str
-
-    _primary_columns: list[str]
-    _site_columns: dict[str, list[str]]
-
-    def __init__(self, pidmap: pd.DataFrame):
+    def __init__(
+            self, name: str, pidmap: pd.DataFrame,
+            *, primary_columns: list[str], site_columns: dict[str, list[str]]
+    ):
         """
 
+        :param name:
         :param pidmap:
+        :param primary_columns:
+        :param site_columns:
         """
+        self._name = name
         self._pidmap = pidmap
 
-    def __getitem__(self, item: str):
+        self._primary_columns = primary_columns
+        self._site_columns = site_columns
+
+    def __repr__(self) -> str:
         """
 
-        :param item:
         :return:
         """
-        return pd.concat(
-            [self.primary_df, self.site_df(item)],
-            axis=1
-        )
+        return "_Flavor(name='%s')" % self.name
 
     @property
     def name(self) -> str:
@@ -47,14 +50,6 @@ class Flavor:
         return self._name
 
     @property
-    def sites(self) -> tuple[str]:
-        """
-
-        :return:
-        """
-        return tuple(self._site_columns.keys())
-
-    @property
     def pidmap(self) -> pd.DataFrame:
         """
 
@@ -63,36 +58,34 @@ class Flavor:
         return self._pidmap
 
     @property
-    def primary_df(self) -> pd.DataFrame:
+    def primary_columns(self) -> list[str]:
         """
 
         :return:
         """
-        return self.pidmap.loc[:, self._primary_columns]
+        return self._primary_columns
 
-    def site_df(self, name: str) -> pd.DataFrame:
+    @property
+    def site_columns(self) -> dict[str, list[str]]:
         """
 
-        :param name:
         :return:
         """
-        columns = self._site_columns[name]
-
-        return self.pidmap.loc[:, columns]
+        return self._site_columns
 
 
-class _SmartFantasyBaseball(Flavor):
+class _SmartFantasyBaseball(_Flavor):
     """
     Wrapper for :py:class:`sabrmetrics.sfbb.tools.PlayerIDMap`.
     """
-    _name = "SmartFantasyBaseball"
+    __name = "SmartFantasyBaseball"
 
-    _primary_columns: list[str] = [
+    __primary_columns: list[str] = [
         "PlayerID", "Name", "LastName", "FirstName", "LastFirst",
         "Birthdate", "Team", "League", "Position", "AllPositions",
         "Bats", "Throws", "Active"
     ]
-    _site_columns: dict[str, list[str]] = {
+    __site_columns: dict[str, list[str]] = {
         "BaseballHQ": ["BaseballHQ"],
         "BaseballProspectus": ["BaseballProspectus"],
         "BaseballReference": ["BaseballReference"],
@@ -121,4 +114,86 @@ class _SmartFantasyBaseball(Flavor):
         """
         self._obj = sfbb.tools.PlayerIDMap()
 
-        super().__init__(self._obj.playeridmap)
+        super().__init__(
+            self.__name, self._obj.playeridmap,
+            primary_columns=self.__primary_columns,
+            site_columns=self.__site_columns
+        )
+
+
+class PlayerIDs:
+    """
+
+    """
+    __flavors = {
+        "SmartFantasyBaseball": _SmartFantasyBaseball
+    }
+
+    def __init__(self, flavor: typing.Union[str, _Flavor]):
+        """
+
+        :param flavor:
+        """
+        if isinstance(flavor, str):
+            self._flavor = self.get_flavor(flavor)
+        elif isinstance(flavor, _Flavor):
+            self._flavor = flavor
+        else:
+            raise TypeError("Expected str or _Flavor, got %s", type(flavor))
+
+    def __getitem__(self, item: str):
+        """
+
+        :param item:
+        :return:
+        """
+        return pd.concat(
+            [self.primary_df, self.site_df(item)],
+            axis=1
+        )
+
+    @classmethod
+    def get_flavor(cls, name: str) -> _Flavor:
+        """
+
+        :param name:
+        :return:
+        """
+        flavor_cls = cls.__flavors[name]
+        flavor = flavor_cls()
+
+        return flavor
+
+    @property
+    def pidmap(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self._flavor.pidmap
+
+    @property
+    def sites(self) -> tuple[str]:
+        """
+
+        :return:
+        """
+        return tuple(self._flavor.site_columns)
+
+    @property
+    def primary_df(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self.pidmap.loc[:, self._flavor.primary_columns]
+
+    def site_df(self, name: str) -> pd.DataFrame:
+        """
+
+        :param name:
+        :return:
+        """
+        columns = self._flavor.site_columns[name]
+
+        return self.pidmap.loc[:, columns]

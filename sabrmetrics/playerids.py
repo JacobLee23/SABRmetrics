@@ -39,7 +39,7 @@ class _Flavor:
 
         :return:
         """
-        return "_Flavor(name='%s')" % self.name
+        return f"_Flavor(name='{self.name}')"
 
     @property
     def name(self) -> str:
@@ -139,7 +139,9 @@ class PlayerIDs:
         elif isinstance(flavor, _Flavor):
             self._flavor = flavor
         else:
-            raise TypeError("Expected str or _Flavor, got %s", type(flavor))
+            raise TypeError(
+                f"Expected str or _Flavor, got {type(flavor)}"
+            )
 
     def __getitem__(self, item: str):
         """

@@ -300,7 +300,7 @@ class PlayerIDMap:
         # Creating a `datetime.datetime` object from the string would require a `try`/`except`.
         # Instead, we assume that the date format is common and parseable by `dateutil`.
         df["Birthdate"] = df["Birthdate"].apply(
-            lambda x: dateutil.parser.parse(x)
+            dateutil.parser.parse
         )
         # `str` -> `list[str]`
         df["AllPositions"] = df["AllPositions"].apply(

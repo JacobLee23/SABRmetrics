@@ -17,6 +17,7 @@ class Flavor:
     """
     _name: str
 
+    _primary_columns: list[str]
     _site_columns: dict[str, list[str]]
 
     def __init__(self, pidmap: pd.DataFrame):
@@ -32,9 +33,10 @@ class Flavor:
         :param item:
         :return:
         """
-        columns: list[str] = self._site_columns[item]
-
-        return self.pidmap.loc[:, columns]
+        return pd.concat(
+            [self.primary_df, self.site_df(item)],
+            axis=1
+        )
 
     @property
     def name(self) -> str:
@@ -60,6 +62,24 @@ class Flavor:
         """
         return self._pidmap
 
+    @property
+    def primary_df(self) -> pd.DataFrame:
+        """
+
+        :return:
+        """
+        return self.pidmap.loc[:, self._primary_columns]
+
+    def site_df(self, name: str) -> pd.DataFrame:
+        """
+
+        :param name:
+        :return:
+        """
+        columns = self._site_columns[name]
+
+        return self.pidmap.loc[:, columns]
+
 
 class _SmartFantasyBaseball(Flavor):
     """
@@ -67,6 +87,11 @@ class _SmartFantasyBaseball(Flavor):
     """
     _name = "SmartFantasyBaseball"
 
+    _primary_columns: list[str] = [
+        "PlayerID", "Name", "LastName", "FirstName", "LastFirst",
+        "Birthdate", "Team", "League", "Position", "AllPositions",
+        "Bats", "Throws", "Active"
+    ]
     _site_columns: dict[str, list[str]] = {
         "BaseballHQ": ["BaseballHQ"],
         "BaseballProspectus": ["BaseballProspectus"],

@@ -29,7 +29,7 @@ URL = "https://www.smartfantasybaseball.com/tools/"
 
 class PlayerIDMap:
     """
-    Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
+    Scraper for the **Player ID Map** section of the Smart Fantasy Baseball *Tools* webpage.
     """
 
     # Maps the original Player ID Map `DataFrame` column names to the column names of the

@@ -1,6 +1,8 @@
 """
 Wrapper for the various Player ID databases in the codebase.
 
+Supported sites:
+
 - `Smart Fantasy Baseball`_: :py:class:`sabrmetrics.sfbb.tools.PlayerIDMap`
 
 .. _Smart Fantasy Baseball: https://smartfantasybaseball.com/
@@ -13,68 +15,70 @@ import pandas as pd
 from sabrmetrics import sfbb
 
 
-class _Flavor:
+class Flavor:
     """
-
+    Represents the Player ID database of one of the supported websites.
+    (See the :py:mod:`sabrmetrics.playerids` documentation for a list of supported websites.
     """
     def __init__(
-            self, name: str, pidmap: pd.DataFrame,
+            self, name: str, pid_df: pd.DataFrame,
             *, primary_columns: list[str], site_columns: dict[str, list[str]]
     ):
         """
-
-        :param name:
-        :param pidmap:
-        :param primary_columns:
-        :param site_columns:
+        :param name: The name of the website from which the Player ID database is taken
+        :param pid_df: The full Player ID ``DataFrame`` defined by the selected website
+        :param primary_columns: The ``pid_df`` primary columns
+        :param site_columns: The ``pid_df`` columns specific to supported SABRmetrics websites
         """
         self._name = name
-        self._pidmap = pidmap
+        self._pid_df = pid_df
 
         self._primary_columns = primary_columns
         self._site_columns = site_columns
 
     def __repr__(self) -> str:
-        """
-
-        :return:
-        """
         return f"_Flavor(name='{self.name}')"
 
     @property
     def name(self) -> str:
         """
-
-        :return:
+        :return: The name of the website from which the Player ID database is taken
         """
         return self._name
 
     @property
-    def pidmap(self) -> pd.DataFrame:
+    def pid_df(self) -> pd.DataFrame:
         """
-
-        :return:
+        :return: The full Player ID ``DataFrame`` defined by the selected website
         """
-        return self._pidmap
+        return self._pid_df
 
     @property
     def primary_columns(self) -> list[str]:
         """
+        The primary columns of the Player ID ``DataFrame`` are universal across all websites.
+        They are independent of the website, such as:
+        active (i.e., active/inactive); age; batting handedness; birthdate; first name; last name;
+        league; name (although some websites have specific formats that are not universal);
+        playing position(s); team; throwing handedness.
 
-        :return:
+        :return: The primary columns of :py:attr:`_Flavor.pid_df`
         """
         return self._primary_columns
 
     @property
     def site_columns(self) -> dict[str, list[str]]:
         """
+        The site-specific columns of the Player ID ``DataFrame`` are unique between websites.
+        They are largely dependent on the website, such as:
+        a site-specific name format; a site-specific identifier (ID).
 
-        :return:
+        :return: The :py:attr:`_Flavor.pid_df` columns specific to supported SABRmetrics websites
         """
         return self._site_columns
 
 
-class _SmartFantasyBaseball(_Flavor):
+class _SmartFantasyBaseball(Flavor):
     """
     Wrapper for :py:class:`sabrmetrics.sfbb.tools.PlayerIDMap`.
     """
@@ -109,9 +113,6 @@ class _SmartFantasyBaseball(_Flavor):
     }
 
     def __init__(self):
-        """
-
-        """
         self._obj = sfbb.tools.PlayerIDMap()
 
         super().__init__(
@@ -123,20 +124,42 @@ class _SmartFantasyBaseball(_Flavor):
 
 class PlayerIDs:
     """
+    Wrapper for :py:class:`Flavor` objects, providing a higher-level API.
 
+    .. note::
+        The ``PlayerIDs`` class defines the ``__getitem__`` magic method
+        (`documentation <https://docs.python.org/3/reference/datamodel.html#object.__getitem__>`_).
+        Indexing a ``PlayerIDs`` object with name of one of the sites supported by the flavor
+        returns the primary columns of the Player ID database concatenated with the site-specific
+        columns of the Player ID database corresponding to the value passed.
+        (A tuple of supported sites is returned by :py:meth:`PlayerIDs.sites`.)
+
+        Sample usage:
+
+        .. code-block:: python
+                >>> import typing
+                >>> import pandas as pd
+                >>> from sabrmetrics import playerids
+                >>> flavor: typing.Union[str, playerids.Flavor]     # E.g., "SmartFantasyBaseball"
+                >>> pids = playerids.PlayerIDs(flavor)
+                >>> site_name: str      # E.g., "BaseballReference", "FanGraphs", "MLB", "Retrosheet"
+                >>> df = pids[site_name]
+                >>> df1 = pids.primary_df
+                >>> df2 = pids.site_df(site_name)
+                >>> df.equals(pd.concat([df1, df2], axis=1))
+                True
     """
     __flavors = {
         "SmartFantasyBaseball": _SmartFantasyBaseball
     }
 
-    def __init__(self, flavor: typing.Union[str, _Flavor]):
+    def __init__(self, flavor: typing.Union[str, Flavor]):
         """
-
-        :param flavor:
+        :param flavor: A :py:class:`Flavor` object or its corresponding ``name``  property
         """
         if isinstance(flavor, str):
             self._flavor = self.get_flavor(flavor)
-        elif isinstance(flavor, _Flavor):
+        elif isinstance(flavor, Flavor):
             self._flavor = flavor
         else:
             raise TypeError(
@@ -145,9 +168,18 @@ class PlayerIDs:
 
     def __getitem__(self, item: str):
         """
+        Let ``pids`` be an instance of ``PlayerIDs``.
+        The expression ``pids[item]`` calls the ``pandas.concat`` function
+        (`documentation <https://pandas.pydata.org/docs/reference/api/pandas.concat.html>`_)
+        to concatenate the ``DataFrame`` object returned by :py:attr:`PlayerIDs.primary_df`
+        with the ``DataFrame`` object returned by the call to :py:meth:`PlayerIDs.site_df`,
+        (more explicitly, ``pids.site_df(item)``).
 
-        :param item:
-        :return:
+        .. note::
+            ``item`` is case-sensitive.
+
+        :param item: The name of the site supported by the Player ID database flavor
+        :return: The primary columns concatenated with the columns spcific to ``item``
         """
         return pd.concat(
             [self.primary_df, self.site_df(item)],
@@ -155,11 +187,16 @@ class PlayerIDs:
         )
 
     @classmethod
-    def get_flavor(cls, name: str) -> _Flavor:
+    def get_flavor(cls, name: str) -> Flavor:
         """
+        Instantiates an object of :py:class:`Flavor` such that :py:attr:`name` equals ``name``.
 
-        :param name:
-        :return:
+        .. note::
+            Argument ``name`` is case-sensitive.
+
+        :param name: The ``name`` property of the :py:class:`Flavor` object
+        :return: The :py:class:`Flavor` object corresponding to ``name``
+        :raise ValueError: No :py:class:`Flavor` class corresponding to ``name`` could be found
         """
         flavor_cls = cls.__flavors[name]
         flavor = flavor_cls()
@@ -167,35 +204,47 @@ class PlayerIDs:
         return flavor
 
     @property
-    def pidmap(self) -> pd.DataFrame:
+    def pid_df(self) -> pd.DataFrame:
         """
-
-        :return:
+        Synonymous to :py:attr:`Flavor.pid_df`.
         """
-        return self._flavor.pidmap
+        return self._flavor.pid_df
 
     @property
-    def sites(self) -> tuple[str]:
+    def sites(self) -> list[str]:
         """
+        Returns a list of the names of the websites supported by the specific Player ID database.
+        All member elements of the returne tuple can be passed as the ``name`` argument of
+        :py:meth:`PlayerIDs.site_df` or as the value used to index the object
+        (i.e., the ``item`` parameter of ``PlayerIDs.__getitem__``).
 
-        :return:
+        :return: The names of the supported sites
         """
-        return tuple(self._flavor.site_columns)
+        return list(self._flavor.site_columns)
 
     @property
     def primary_df(self) -> pd.DataFrame:
         """
+        Indexes :py:meth:`PlayerIDs.pid_df` by the primary columns of the Player ID database.
+        The primary columns labels are determined by :py:attr:`Flavor.primary_columns`.
 
-        :return:
+        :return: The primary columns of the PLayer ID database
         """
-        return self.pidmap.loc[:, self._flavor.primary_columns]
+        return self.pid_df.loc[:, self._flavor.primary_columns]
 
     def site_df(self, name: str) -> pd.DataFrame:
         """
+        Indexes :py:meth:`PlayerIDs.pid_df` by the columns of the Player ID database specific to
+        ``name``.
+        The site-specific column labels are determiend by :py:attr:`Flavor.site_columns`.
 
-        :param name:
-        :return:
+        .. note::
+            A list of supported websites whose names can be passed as the ``name`` argument can be
+            obtained via :py:attr:`PlayerIDs.sites`.
+
+        :param name: The name of the website
+        :return: The site-specific columns of the Player ID database
         """
         columns = self._flavor.site_columns[name]
 
-        return self.pidmap.loc[:, columns]
+        return self.pid_df.loc[:, columns]

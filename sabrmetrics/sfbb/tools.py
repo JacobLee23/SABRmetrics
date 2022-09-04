@@ -29,7 +29,7 @@ URL = "https://www.smartfantasybaseball.com/tools/"
 
 class PlayerIDMap:
     """
-    Scraper for the **Player ID Map** section of the Smart Fantasy Baseball _Tools_ webpage.
+    Scraper for the **Player ID Map** section of the Smart Fantasy Baseball *Tools* webpage.
     """
 
     # Maps the original Player ID Map `DataFrame` column names to the column names of the
@@ -262,8 +262,8 @@ class PlayerIDMap:
             - YahooID
         - ``str``:
             - BaseballReferenceID
-            - ClayDaveportID
             - CBSName
+            - ClayDaveportID
             - DraftKingsName
             - ESPNName
             - FanDuelName
@@ -277,7 +277,6 @@ class PlayerIDMap:
             - MLBName
             - NFBCName
             - NFBCLastFirst
-            - OttoneuID
             - RazzballName
             - RetrosheetID
             - RotoWireName
@@ -301,7 +300,7 @@ class PlayerIDMap:
         # Creating a `datetime.datetime` object from the string would require a `try`/`except`.
         # Instead, we assume that the date format is common and parseable by `dateutil`.
         df["Birthdate"] = df["Birthdate"].apply(
-            lambda x: dateutil.parser.parse(x)
+            dateutil.parser.parse
         )
         # `str` -> `list[str]`
         df["AllPositions"] = df["AllPositions"].apply(

@@ -46,6 +46,8 @@
 
 ***
 
+## Background
+
 An open-source library of web-scraping software for popular SABRmetrics websites. 
 
 > Sabermetrics (or originally as SABRmetrics) is the empirical analysis of baseball, especially baseball statistics that measure in-game activity. 
@@ -55,3 +57,62 @@ An open-source library of web-scraping software for popular SABRmetrics websites
 > sabermetrics, the statistical analysis of baseball data. Sabermetrics aims to quantify baseball players’ performances based on objective statistical measurements, especially in opposition to many of the established statistics (such as, for example, runs batted in and pitching wins) that give less accurate approximations of individual efficacy.
 
 -- [Britannica](https://www.britannica.com/sports/sabermetrics)
+
+***
+
+## Primary Features
+
+- Easy scraping of various Internet Player ID databases
+
+## Installation
+
+From PyPI:
+
+```cmd
+python -m pip install sabrmetrics
+```
+
+## Requirements
+
+This project requires Python 3.7+.
+
+## Dependencies
+
+- [`beautifulsoup4`](https://pypi.org/project/beautifulsoup4/) ([Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/))
+- [`lxml`](https://pypi.org/project/lxml/) ([Documentation](https://lxml.de/))
+- [`numpy`](https://pypi.org/project/numpy/) ([Documentation](https://numpy.org/doc/))
+- [`pandas`](https://pypi.org/project/pandas/) ([Documentation](https://pandas.pydata.org/pandas-docs/stable/))
+- [`python-dateutil`](https://pypi.org/project/python-dateutil/) ([Documentation](https://dateutil.readthedocs.io/))
+- [`requests`](https://pypi.org/project/requests/) ([Documentation](https://requests.readthedocs.io/))
+
+This project uses [`pipenv`](https://pypi.org/project/pipenv/) ([Documentation](https://pipenv.pypa.io/en/latest/)) for virtual environment dependency management.
+See the [Pipfile](https://github.com/JacobLee23/SABRmetrics/blob/master/Pipfile) to see a full list of package dependencies, including development dependencies.
+
+## Testing
+
+The tests for this project are written using [`pytest`](https://pypi.org/project/pytest) ([Documentation](https://docs.pytest.org/)).
+To run the project tests, run:
+
+```cmd
+pytest sabrmetrics/tests/
+```
+
+The `pipenv` command script shorthand defined in the project Pipfile can also be used to run the project tests; run:
+
+```cmd
+pipenv pytest
+```
+
+Another `pipenv` command script shorthand is defined in the project Pipfile can be used to output an HTML test report, using [`pytest-html`](https://pypi.org/project/pytest-html) ([Documentation](https://pytest-html.readthedocs.io/)); run:
+
+```cmd
+pipenv pytest-html
+```
+
+## License
+
+This project is license under the [MIT License](https://github.com/JacobLee23/SABRmetrics/blob/master/LICENSE).
+
+## Documentation
+
+The documentation for this project is hosted by [Read the Docs](https://readthedocs.org/): [Official Documentation]()

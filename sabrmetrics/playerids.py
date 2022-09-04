@@ -82,25 +82,25 @@ class _SmartFantasyBaseball(Flavor):
     """
     Wrapper for :py:class:`sabrmetrics.sfbb.tools.PlayerIDMap`.
     """
-    __name = "SmartFantasyBaseball"
+    _name = "SmartFantasyBaseball"
 
-    __primary_columns: list[str] = [
+    _primary_columns: list[str] = [
         "PlayerID", "Name", "LastName", "FirstName", "LastFirst",
         "Birthdate", "Team", "League", "Position", "AllPositions",
         "Bats", "Throws", "Active"
     ]
-    __site_columns: dict[str, list[str]] = {
-        "BaseballHQ": ["BaseballHQ"],
-        "BaseballProspectus": ["BaseballProspectus"],
-        "BaseballReference": ["BaseballReference"],
+    _site_columns: dict[str, list[str]] = {
+        "BaseballHQ": ["BaseballHQID"],
+        "BaseballProspectus": ["BaseballProspectusID"],
+        "BaseballReference": ["BaseballReferenceID"],
         "CBS": ["CBSID", "CBSName"],
         "ClayDavenport": ["ClayDavenportID"],
         "DraftKings": ["DraftKingsName"],
-        "ESPN": ["ESPNID", "ESPN"],
+        "ESPN": ["ESPNID", "ESPNName"],
         "FanDuel": ["FanDuelID", "FanDuelName"],
-        "FanGraphs": ["FanGraphsID", "FangraphsName"],
+        "FanGraphs": ["FanGraphsID", "FanGraphsName"],
         "FantasyPros": ["FantasyProsName"],
-        "FanTrax": ["FanTraxID"],
+        "FanTrax": ["FantraxID"],
         "KFFL": ["KFFLName"],
         "Masterball": ["MasterballName"],
         "MLB": ["MLBID", "MLBName"],
@@ -116,9 +116,9 @@ class _SmartFantasyBaseball(Flavor):
         self._obj = sfbb.tools.PlayerIDMap()
 
         super().__init__(
-            self.__name, self._obj.playeridmap,
-            primary_columns=self.__primary_columns,
-            site_columns=self.__site_columns
+            self._name, self._obj.playeridmap,
+            primary_columns=self._primary_columns,
+            site_columns=self._site_columns
         )
 
 
@@ -137,19 +137,19 @@ class PlayerIDs:
         Sample usage:
 
         .. code-block:: python
-                >>> import typing
-                >>> import pandas as pd
-                >>> from sabrmetrics import playerids
-                >>> flavor: typing.Union[str, playerids.Flavor]     # E.g., "SmartFantasyBaseball"
-                >>> pids = playerids.PlayerIDs(flavor)
-                >>> site_name: str      # E.g., "BaseballReference", "FanGraphs", "MLB", "Retrosheet"
-                >>> df = pids[site_name]
-                >>> df1 = pids.primary_df
-                >>> df2 = pids.site_df(site_name)
-                >>> df.equals(pd.concat([df1, df2], axis=1))
-                True
+            >>> import typing
+            >>> import pandas as pd
+            >>> from sabrmetrics import playerids
+            >>> flavor: typing.Union[str, playerids.Flavor]     # E.g., "SmartFantasyBaseball"
+            >>> pids = playerids.PlayerIDs(flavor)
+            >>> site_name: str      # E.g., "BaseballReference", "FanGraphs", "MLB", "Retrosheet"
+            >>> df = pids[site_name]
+            >>> df1 = pids.primary_df
+            >>> df2 = pids.site_df(site_name)
+            >>> df.equals(pd.concat([df1, df2], axis=1))
+            True
     """
-    __flavors = {
+    _flavors: dict[str, type] = {
         "SmartFantasyBaseball": _SmartFantasyBaseball
     }
 
@@ -165,6 +165,9 @@ class PlayerIDs:
             raise TypeError(
                 f"Expected str or _Flavor, got {type(flavor)}"
             )
+
+    def __repr__(self) -> str:
+        return f"PlayerIDs(_flavor={self._flavor})"
 
     def __getitem__(self, item: str):
         """
@@ -187,6 +190,14 @@ class PlayerIDs:
         )
 
     @classmethod
+    def flavors(cls) -> dict[str, type]:
+        """
+
+        :return:
+        """
+        return cls._flavors
+
+    @classmethod
     def get_flavor(cls, name: str) -> Flavor:
         """
         Instantiates an object of :py:class:`Flavor` such that :py:attr:`name` equals ``name``.
@@ -196,9 +207,9 @@ class PlayerIDs:
 
         :param name: The ``name`` property of the :py:class:`Flavor` object
         :return: The :py:class:`Flavor` object corresponding to ``name``
-        :raise ValueError: No :py:class:`Flavor` class corresponding to ``name`` could be found
+        :raise KeyError: No :py:class:`Flavor` class corresponding to ``name`` could be found
         """
-        flavor_cls = cls.__flavors[name]
+        flavor_cls = cls._flavors[name]
         flavor = flavor_cls()
 
         return flavor
@@ -242,8 +253,11 @@ class PlayerIDs:
             A list of supported websites whose names can be passed as the ``name`` argument can be
             obtained via :py:attr:`PlayerIDs.sites`.
 
+            Argument ``name`` is case-sensitive.
+
         :param name: The name of the website
         :return: The site-specific columns of the Player ID database
+        :raise KeyError: No supported website corresponding to ``name`` could be found
         """
         columns = self._flavor.site_columns[name]
 

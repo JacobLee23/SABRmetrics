@@ -21,8 +21,9 @@ class Flavor:
     (See the :py:mod:`sabrmetrics.playerids` documentation for a list of supported websites.
     """
     def __init__(
-            self, name: str, pid_df: pd.DataFrame,
-            *, primary_columns: list[str], site_columns: dict[str, list[str]]
+            self, name: str, pid_df: pd.DataFrame, *,
+            primary_columns: typing.List[str],
+            site_columns: typing.Dict[str, typing.List[str]]
     ):
         """
         :param name: The name of the website from which the Player ID database is taken
@@ -54,7 +55,7 @@ class Flavor:
         return self._pid_df
 
     @property
-    def primary_columns(self) -> list[str]:
+    def primary_columns(self) -> typing.List[str]:
         """
         The primary columns of the Player ID ``DataFrame`` are universal across all websites.
         They are independent of the website, such as:
@@ -67,7 +68,7 @@ class Flavor:
         return self._primary_columns
 
     @property
-    def site_columns(self) -> dict[str, list[str]]:
+    def site_columns(self) -> typing.Dict[str, typing.List[str]]:
         """
         The site-specific columns of the Player ID ``DataFrame`` are unique between websites.
         They are largely dependent on the website, such as:
@@ -84,12 +85,12 @@ class _SmartFantasyBaseball(Flavor):
     """
     _name = "SmartFantasyBaseball"
 
-    _primary_columns: list[str] = [
+    _primary_columns: typing.List[str] = [
         "PlayerID", "Name", "LastName", "FirstName", "LastFirst",
         "Birthdate", "Team", "League", "Position", "AllPositions",
         "Bats", "Throws", "Active"
     ]
-    _site_columns: dict[str, list[str]] = {
+    _site_columns: typing.Dict[str, typing.List[str]] = {
         "BaseballHQ": ["BaseballHQID"],
         "BaseballProspectus": ["BaseballProspectusID"],
         "BaseballReference": ["BaseballReferenceID"],
@@ -149,7 +150,7 @@ class PlayerIDs:
             >>> df.equals(pd.concat([df1, df2], axis=1))
             True
     """
-    _flavors: dict[str, type] = {
+    _flavors: typing.Dict[str, type] = {
         "SmartFantasyBaseball": _SmartFantasyBaseball
     }
 
@@ -190,7 +191,7 @@ class PlayerIDs:
         )
 
     @classmethod
-    def flavors(cls) -> dict[str, type]:
+    def flavors(cls) -> typing.Dict[str, type]:
         """
 
         :return:
@@ -222,7 +223,7 @@ class PlayerIDs:
         return self._flavor.pid_df
 
     @property
-    def sites(self) -> list[str]:
+    def sites(self) -> typing.List[str]:
         """
         Returns a list of the names of the websites supported by the specific Player ID database.
         All member elements of the returne tuple can be passed as the ``name`` argument of

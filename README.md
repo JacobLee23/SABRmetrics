@@ -74,7 +74,11 @@ python -m pip install sabrmetrics
 
 ## Requirements
 
-This project requires Python 3.7+.
+This project requires Python 3.6+.
+
+*Note: Some of the packages listed in the project Pipfile under `dev-packages` are not compatible with Python 3.6.
+This includes `pytest`, so project tests cannot be run using Python 3.6.
+However, all primary dependencies (under `default`) are compatible with Python 3.6, so Python 3.6 supports most normal functionality.*
 
 ## Dependencies
 
@@ -97,13 +101,13 @@ To run the project tests, run:
 pytest sabrmetrics/tests/
 ```
 
-The `pipenv` command script shorthand defined in the project Pipfile can also be used to run the project tests; run:
+The `pipenv` command script shorthand defined in the project [Pipfile][Pipfile] can also be used to run the project tests; run:
 
 ```cmd
 pipenv pytest
 ```
 
-Another `pipenv` command script shorthand is defined in the project Pipfile can be used to output an HTML test report, using [`pytest-html`](https://pypi.org/project/pytest-html) ([Documentation](https://pytest-html.readthedocs.io/)); run:
+Another `pipenv` command script shorthand is defined in the project [Pipfile][Pipfile] can be used to output an HTML test report, using [`pytest-html`](https://pypi.org/project/pytest-html) ([Documentation](https://pytest-html.readthedocs.io/)); run:
 
 ```cmd
 pipenv pytest-html
@@ -111,8 +115,15 @@ pipenv pytest-html
 
 ## License
 
-This project is license under the [MIT License](https://github.com/JacobLee23/SABRmetrics/blob/master/LICENSE).
+This project is license under the [MIT License][LICENSE].
 
 ## Documentation
 
-The documentation for this project is hosted by [Read the Docs](https://readthedocs.org/): [Official Documentation]()
+[![Documentation Status](https://readthedocs.org/projects/sabrmetrics/badge/?version=latest)][Documentation]
+
+The documentation for this project is hosted by [Read the Docs](https://readthedocs.org/): [Official Documentation][Documentation]
+
+
+[Documentation]: https://sabrmetrics.readthedocs.io/en/latest/
+[LICENSE]: https://github.com/JacobLee23/SABRmetrics/blob/master/LICENSE
+[Pipfile]: https://github.com/JacobLee23/SABRmetrics/blob/master/Pipfile

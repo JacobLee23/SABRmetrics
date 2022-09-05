@@ -72,6 +72,12 @@ From PyPI:
 python -m pip install sabrmetrics
 ```
 
+Directly from GitHub:
+
+```cmd
+python -m pip install -e git+https://github.com/JacobLee23/SABRmetrics.git#egg=sabrmetrics
+```
+
 ## Requirements
 
 This project requires Python 3.6+.

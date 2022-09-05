@@ -28,4 +28,9 @@ requires-python = ">=3.6"
 homepage = "https://github.com/JacobLee23/SABRmetrics"
 
 [tool.setuptools.packages.find]
-exclude = ["sabrmetrics.tests*"]
+where = ["."]
+include = ["sabrmetrics*"]
+exclude = [
+    "sabrmetrics.docs*",
+    "sabrmetrics.tests*"
+]

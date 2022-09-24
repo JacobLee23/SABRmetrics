@@ -31,3 +31,16 @@ class TestRegularSeason:
         """
         with requests.get(x.address) as response:
             assert response.status_code == 200, x.address
+
+    def test_response(self, x: standings.RegularSeason):
+        """
+        Unit test for :py:attr:`sabrmetrics.mlb.standings.RegularSeason.response`.
+        """
+        assert x.response.status_code == 200
+
+    def test_soup(self, x: standings.RegularSeason):
+        """
+        Unit test for :py:attr:`sabrmetrics.mlb.standings.RegularSeason.soup`.
+        """
+        assert x.soup
+        assert x.soup.select_one("html")

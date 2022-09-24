@@ -2,6 +2,7 @@
 Tests for :py:mod:`sabrmetrics.mlb.standings`.
 """
 
+import datetime
 
 import pytest
 import requests
@@ -9,9 +10,20 @@ import requests
 from sabrmetrics.mlb import standings
 
 
+TODAY = datetime.date.today()
+YESTERDAY = TODAY - datetime.timedelta(days=1)
+TOMORROW = TODAY + datetime.timedelta(days=1)
+
+
 @pytest.mark.parametrize(
     "x", [
-        standings.RegularSeason()
+        standings.RegularSeason(),
+        standings.RegularSeason(date=YESTERDAY),
+        standings.RegularSeason(year=1901),
+        *[standings.RegularSeason(year=x) for x in [1955, 1959, 1963, 1965, 1981, 2020]],
+        standings.RegularSeason(year=TODAY.year),
+        *[standings.RegularSeason(group=x) for x in standings.RegularSeason._groups.values()],
+        *[standings.RegularSeason(level=x) for x in standings.RegularSeason._levels.values()]
     ]
 )
 class TestRegularSeason:

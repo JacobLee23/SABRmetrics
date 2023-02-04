@@ -93,6 +93,12 @@ def test_league_all_data(season: int):
     assert all(isinstance(k, str) for v in x["leagues"] for k in v)
 
 
+class TestSeason:
+    """
+    Unit tests for :py:class:`league.Season`.
+    """
+
+
 @pytest.mark.parametrize(
     "date, res", [
         (datetime.datetime(TODAY.year - 1, 1, 1), TODAY.year - 2),
@@ -101,7 +107,7 @@ def test_league_all_data(season: int):
         (datetime.datetime(TODAY.year, 12, 31), TODAY.year)
     ]
 )
-def test_latest_season(date: datetime.datetime, res: int):
+def test_season_latest(date: datetime.datetime, res: int):
     """
     Unit test for :py:func:`league.latest_season`.
     """

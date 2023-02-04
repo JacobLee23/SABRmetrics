@@ -6,6 +6,7 @@ API wrapper for MLB `league data`_.
 
 import dataclasses
 import datetime
+import typing
 
 import requests
 
@@ -136,19 +137,59 @@ class GrapefruitLeague(League):
         super().__init__(115, season)
 
 
-def latest_season(date: datetime.datetime = TODAY) -> int:
+class Season:
     """
-    :param league:
-    :param date:
-    :return:
     """
-    season_start = [
-        AmericanLeague(date.year).data["leagues"][0]["seasonDateInfo"]["seasonStartDate"],
-        NationalLeague(date.year).data["leagues"][0]["seasonDateInfo"]["seasonStartDate"]
-    ]
-    assert season_start[0] == season_start[1]
+    def __init__(self, year: int = TODAY.year):
+        self._year = year
 
-    dt_format = "%Y-%m-%d"
-    start_date = datetime.datetime.strptime(season_start[0], dt_format)
+        league_data = (
+            AmericanLeague(year).data["leagues"][0],
+            NationalLeague(year).data["leagues"][0]
+        )
+        assert league_data[0]["seasonDateInfo"] == league_data[1]["seasonDateInfo"]
 
-    return date.year if date >= start_date else date.year - 1
+        self._data = league_data[0]["seasonDateInfo"]
+
+    def __getitem__(self, key: str) -> typing.Union[int, float, str, datetime.datetime]:
+        value = self.data[key]
+
+        try:
+            return int(value)
+        except ValueError:
+            pass
+
+        try:
+            return float(value)
+        except ValueError:
+            pass
+
+        try:
+            return datetime.datetime.strptime(value, "%Y-%m-%d")
+        except ValueError:
+            pass
+
+        return value
+
+    @property
+    def data(self) -> dict:
+        """
+        :return:
+        """
+        return self._data
+
+    @property
+    def year(self) -> int:
+        """
+        :return:
+        """
+        return self._year
+
+    @classmethod
+    def latest(cls, date: datetime.datetime = TODAY) -> "Season":
+        """
+        :param date:
+        :return:
+        """
+        season = cls(TODAY.year)
+        return season if date >= season["seasonStartDate"] else cls(date.year - 1)

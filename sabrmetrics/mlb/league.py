@@ -6,13 +6,12 @@ API wrapper for MLB `league data`_.
 
 import dataclasses
 import datetime
+import typing
 
 import requests
 
 from .address import Address_
-
-
-CURRENT_YEAR = datetime.datetime.today().year
+from sabrmetrics import TODAY
 
 
 class Address(Address_):
@@ -25,7 +24,7 @@ class Address(Address_):
         :param season:
         """
         league_id: int = None
-        season: int = CURRENT_YEAR
+        season: int = TODAY.year
 
     @classmethod
     def concatenate(cls, fields: Fields) -> str:
@@ -110,7 +109,7 @@ class AmericanLeague(League):
     """
     :param season:
     """
-    def __init__(self, season: int = CURRENT_YEAR):
+    def __init__(self, season: int = TODAY.year):
         super().__init__(103, season)
 
 
@@ -118,7 +117,7 @@ class NationalLeague(League):
     """
     :param season:
     """
-    def __init__(self, season: int = CURRENT_YEAR):
+    def __init__(self, season: int = TODAY.year):
         super().__init__(104, season)
 
 
@@ -126,7 +125,7 @@ class CactusLeague(League):
     """
     :param season:
     """
-    def __init__(self, season: int = CURRENT_YEAR):
+    def __init__(self, season: int = TODAY.year):
         super().__init__(114, season)
 
 
@@ -134,5 +133,23 @@ class GrapefruitLeague(League):
     """
     :param season:
     """
-    def __init__(self, season: int = CURRENT_YEAR):
+    def __init__(self, season: int = TODAY.year):
         super().__init__(115, season)
+
+
+def latest_season(date: datetime.datetime = TODAY) -> int:
+    """
+    :param league:
+    :param date:
+    :return:
+    """
+    season_start = [
+        AmericanLeague(date.year).data["leagues"][0]["seasonDateInfo"]["seasonStartDate"],
+        NationalLeague(date.year).data["leagues"][0]["seasonDateInfo"]["seasonStartDate"]
+    ]
+    assert season_start[0] == season_start[1]
+
+    dt_format = "%Y-%m-%d"
+    start_date = datetime.datetime.strptime(season_start[0], dt_format)
+
+    return date.year if date >= start_date else date.year - 1

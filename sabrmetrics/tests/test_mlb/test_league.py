@@ -1,11 +1,13 @@
 """
 """
 
+import datetime
 import urllib.request
 
 import pytest
 import requests
 
+from sabrmetrics import TODAY
 from sabrmetrics.mlb import league
 
 
@@ -77,11 +79,11 @@ class TestLeague:
 
 
 @pytest.mark.parametrize(
-    "season", range(2000, league.CURRENT_YEAR + 1)
+    "season", range(2000, TODAY.year + 1)
 )
 def test_league_all_data(season: int):
     """
-    Unit tests for :py:meth:`league.League.all_data`
+    Unit test for :py:meth:`league.League.all_data`.
     """
     x = league.League.all_data(season)
 
@@ -89,3 +91,18 @@ def test_league_all_data(season: int):
     assert isinstance(x["leagues"], list) and x["leagues"]
     assert all(isinstance(v, dict) for v in x["leagues"])
     assert all(isinstance(k, str) for v in x["leagues"] for k in v)
+
+
+@pytest.mark.parametrize(
+    "date, res", [
+        (datetime.datetime(TODAY.year - 1, 1, 1), TODAY.year - 2),
+        (datetime.datetime(TODAY.year - 1, 12, 31), TODAY.year - 1),
+        (datetime.datetime(TODAY.year, 1, 1), TODAY.year - 1),
+        (datetime.datetime(TODAY.year, 12, 31), TODAY.year)
+    ]
+)
+def test_latest_season(date: datetime.datetime, res: int):
+    """
+    Unit test for :py:func:`league.latest_season`.
+    """
+    assert league.latest_season(date) == res, date

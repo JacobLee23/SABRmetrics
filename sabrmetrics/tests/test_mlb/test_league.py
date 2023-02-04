@@ -17,12 +17,6 @@ def test_base_address():
         assert response.code == 200
 
 
-def test_leagues():
-    """
-    Unit test for :py:func:`league.leagues`.
-    """
-
-
 @pytest.mark.parametrize(
     "x", [
         league.AmericanLeague(), league.NationalLeague(),
@@ -63,8 +57,7 @@ class TestLeague:
         assert isinstance(x, tuple(mlb_leagues))
 
         assert isinstance(x.data, dict)
-        assert isinstance(x.data["leagues"], list)
-        assert len(x.data["leagues"]) == 1
+        assert isinstance(x.data["leagues"], list) and len(x.data["leagues"]) == 1
         assert isinstance(x.data["leagues"][0], dict)
         assert all(isinstance(k, str) for k in x.data["leagues"][0])
 
@@ -77,3 +70,18 @@ class TestLeague:
             if isinstance(x, k):
                 assert x.data["leagues"][0]["name"] == v[0]
                 assert x.data["leagues"][0]["abbreviation"] == v[1]
+
+
+@pytest.mark.parametrize(
+    "season", range(2000, league.CURRENT_YEAR + 1)
+)
+def test_league_all_data(season: int):
+    """
+    Unit tests for :py:meth:`league.League.all_data`
+    """
+    x = league.League.all_data(season)
+
+    assert isinstance(x, dict)
+    assert isinstance(x["leagues"], list) and x["leagues"]
+    assert all(isinstance(v, dict) for v in x["leagues"])
+    assert all(isinstance(k, str) for v in x["leagues"] for k in v)

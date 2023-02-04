@@ -14,16 +14,18 @@ BASE_ADDRESS = "https://statsapi.mlb.com/api/v1/league"
 CURRENT_YEAR = datetime.datetime.today().year
 
 
-def leagues(season: int = CURRENT_YEAR) -> dict:
-    """
+def concatenate_url(league_id: int = None, season: int = None):
+    address = BASE_ADDRESS
 
-    :param season:
-    :return:
-    """
-    address = f"{BASE_ADDRESS}?season={season}"
+    if league_id is not None and isinstance(league_id, int):
+        address += f"/{league_id}"
 
-    with requests.get(address) as response:
-        return response.json()
+    address += "?"
+
+    if season is not None and isinstance(season, int):
+        address += f"season={season}"
+
+    return address
 
 
 class League:
@@ -31,14 +33,22 @@ class League:
     :param league_id:
     :param season:
     """
-    format_address = "https://statsapi.mlb.com/api/v1/league/{}?season={}"
-    
     def __init__(self, league_id: int, season: int):
         self._league_id, self._season = int(league_id), int(season)
 
-        self._address = self.format_address.format(self.league_id, self.season)
+        self._address = concatenate_url(self.league_id, self.season)
         self._response = requests.get(self.address)
         self._data = self.response.json()
+
+    @classmethod
+    def all_data(cls, season: int) -> dict:
+        """
+        :param season:
+        """
+        address = concatenate_url(season=season)
+
+        with requests.get(address) as response:
+            return response.json()
 
     @property
     def address(self) -> str:

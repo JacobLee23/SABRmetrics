@@ -2,89 +2,97 @@
 
 """
 
-import collections
+import dataclasses
 import datetime
 import typing
 
-import bs4
 import requests
 
+from . import league
+from .address import Address_
+from .league import AmericanLeague, NationalLeague
+from sabrmetrics import TODAY
 
-class RegularSeason:
+
+class Address(Address_):
+    base = "https://statsapi.mlb.com/api/v1/standings"
+
+    @dataclasses.dataclass
+    class Fields:
+        """
+        :param league_id:
+        :param season:
+        :param date:
+        :param standings_types:
+        :param hydrate:
+        """
+        league_id: typing.Tuple[int] = tuple(
+            lg().data["leagues"][0]["id"] for lg in [
+                AmericanLeague, NationalLeague
+            ]
+        )
+        season: int = league.Season.latest().year
+        date: datetime.datetime = min(TODAY, league.Season.latest()["regularSeasonEndDate"])
+        standings_types: typing.Tuple[str] = (
+            "regularSeason", "springTraining", "firstHalf", "secondHalf"
+        )
+        hydrate: typing.Tuple[str] = (
+            "division", "conference", "sport", "league",
+            "team({next_schedule},{previous_schedule})".format(
+                next_schedule="nextSchedule(team,gameType=[R,F,D,L,W,C],inclusive=false)",
+                previous_schedule="previousSchedule(team,gameType=[R,F,D,L,W,C],inclusive=true)"
+            )
+        )
+
+    @classmethod
+    def concatenate(cls, fields: Fields) -> str:
+        cls.check_address_fields(fields)
+
+        queries = {}
+        if fields.league_id:
+            queries.setdefault("leagueId", ",".join(map(str, fields.league_id)))
+        if fields.season:
+            queries.setdefault("season", str(fields.season))
+        if fields.date:
+            queries.setdefault("date", fields.date.strftime("%Y-%m-%d"))
+        if fields.standings_types:
+            queries.setdefault("standingsTypes", ",".join(fields.standings_types))
+        if fields.hydrate:
+            queries.setdefault("hydrate", ",".join(fields.hydrate))
+
+        address = cls.base + "?" + "&".join(f"{k}={v}" for k, v in queries.items())
+
+        return address
+
+
+class Standings:
     """
-    .. note::
-
-        Argument ``date`` takes precedence over argument ``year``.
-
-    .. note::
-
-        Argument ``year`` and the year component of argument ``date`` must be greater than or equal
-        to 1901 and less than or equal to the current year
-
-    .. note::
-
-        Invalid values for ``date`` are handled internally by the MLB website API.
-
-        If ``date`` precedes the first day of the regular season of ``year``, then ``date``
-        defaults to the first day of the regular season.
-        If the season has not yet been completed and ``date`` succeeds the present day, then
-        ``date`` defaults to the present day.
-        If ``date`` succeeds the last day of the regular season of ``year``, then ``date`` defaults
-        to the last day of the regular season.
-
-        For example:
-
-        - ``2022-01-01`` defaults to ``2022-04-07`` (Opening Day of the 2022 regular season)
-        - ``2022-12-31`` defaults to ``2022-10-02`` (Final Day of the 2022 regular season)
-
-        But, on ``2022-04-20``, ``2022-12-31`` defaults to ``2022-04-20``.
-
-        However, an invalid year component of argument ``date`` results in ``HTTP 404``.
-
+    :param league_id:
+    :param season:
     :param date:
-    :param year:
-    :param group:
-    :param level:
     """
-    base_address = "https://mlb.com/standings"
-
-    _groups = {"division": "", "league": "league", "mlb": "mlb"}
-    groups = collections.namedtuple("StandingsGroups", _groups)(**_groups)
-
-    _levels = {"standard": "", "advanced": "advanced-splits"}
-    levels = collections.namedtuple("StandingsLevels", _levels)(**_levels)
-
     def __init__(
             self, *,
-            date: typing.Optional[datetime.date] = None,
-            year: typing.Optional[int] = None,
-            group: typing.Optional[str] = None,
-            level: typing.Optional[str] = None
+            league_id: typing.Optional[typing.Sequence[int]] = None,
+            season: typing.Optional[int] = None,
+            date: typing.Optional[datetime.datetime] = None
     ):
-        self._address = self.base_address
+        self._fields = Address.defaults()
 
-        if group is not None and isinstance(group, str):
-            if group not in self._groups.values():
-                raise ValueError("invalid argument 'group' for standings input")
-            self._address += f"/{group}"
+        if league_id:
+            self._fields.league_id = tuple(map(int, league_id))
+        if season:
+            self._fields.season = int(season)
+        if date:
+            szn = league.Season(date.year)
+            if not (szn["regularSeasonStartDate"] <= date <= szn["regularSeasonEndDate"]):
+                date = league.Season.latest(date)["regularSeasonEndDate"]
+            self._fields.date = date
 
-        if level is not None and isinstance(level, str):
-            if level not in self._levels.values():
-                raise ValueError("invalid argument 'level' for standings input")
-            self._address += f"/{level}"
-
-        if date is not None and isinstance(date, datetime.date):
-            if date.year < 1901 or date.year > datetime.date.today().year:
-                raise ValueError(f"invalid argument 'date' for standings input: {date}")
-            self._address += f"/{date.strftime('%Y-%m-%d')}"
-
-        elif year is not None and isinstance(year, int):
-            if year < 1901 or year > datetime.datetime.today().year:
-                raise ValueError(f"invalid argument 'year' for standings input: {year}")
-            self._address += f"/{year}"
+        self._address = Address.concatenate(self.fields)
 
         self._response = requests.get(self.address)
-        self._soup = bs4.BeautifulSoup(self.resopnse.text, features="lxml")
+        self._data = self.response.json()
 
     @property
     def address(self) -> str:
@@ -103,9 +111,16 @@ class RegularSeason:
         return self._response
 
     @property
-    def soup(self) -> bs4.BeautifulSoup:
+    def data(self) -> dict:
         """
 
         :return:
         """
-        return self._soup
+        return self._data
+
+    @property
+    def fields(self) -> Address.Fields:
+        """
+        :return:
+        """
+        return self._fields

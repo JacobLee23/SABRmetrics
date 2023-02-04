@@ -34,8 +34,8 @@ class Address_:
         raise NotImplementedError
 
     @classmethod
-    def default(cls) -> str:
+    def defaults(cls) -> Fields:
         """
         :return:
         """
-        return cls.concatenate(cls.Fields())
+        return cls.Fields()

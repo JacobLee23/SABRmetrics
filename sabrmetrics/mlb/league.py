@@ -1,13 +1,26 @@
 """
+API wrapper for MLB `league data`_.
+
+.. _league data: https://statsapi.mlb.com/api/v1/league
 """
+
+import datetime
 
 import requests
 
 
-def leagues(season: int) -> dict:
+BASE_ADDRESS = "https://statsapi.mlb.com/api/v1/league"
+
+CURRENT_YEAR = datetime.datetime.today().year
+
+
+def leagues(season: int = CURRENT_YEAR) -> dict:
     """
+
+    :param season:
+    :return:
     """
-    address = f"https://statsapi.mlb.com/api/v1/league?season={season}"
+    address = f"{BASE_ADDRESS}?season={season}"
 
     with requests.get(address) as response:
         return response.json()
@@ -15,6 +28,8 @@ def leagues(season: int) -> dict:
 
 class League:
     """
+    :param league_id:
+    :param season:
     """
     format_address = "https://statsapi.mlb.com/api/v1/league/{}?season={}"
     
@@ -28,43 +43,66 @@ class League:
     @property
     def league_id(self) -> int:
         """
+        :return:
         """
         return self._league_id
 
     @property
     def season(self) -> int:
         """
+        :return:
         """
         return self._season
 
     @property
     def address(self) -> str:
         """
+        :return:
         """
         return self._address
 
     @property
     def response(self) -> requests.Response:
         """
+        :return:
         """
         return self._response
 
     @property
     def data(self) -> dict:
         """
+        :return:
         """
         return self._data
 
 
 class AmericanLeague(League):
     """
+    :param season:
     """
-    def __init__(self, season: int):
+    def __init__(self, season: int = CURRENT_YEAR):
         super().__init__(103, season)
 
 
 class NationalLeague(League):
     """
+    :param season:
     """
-    def __init__(self, season: int):
+    def __init__(self, season: int = CURRENT_YEAR):
         super().__init__(104, season)
+
+
+class CactusLeague(League):
+    """
+    :param season:
+    """
+    def __init__(self, season: int = CURRENT_YEAR):
+        super().__init__(114, season)
+
+
+class GrapefruitLeague(League):
+    """
+    :param season:
+    """
+    def __init__(self, season: int = CURRENT_YEAR):
+        super().__init__(115, season)

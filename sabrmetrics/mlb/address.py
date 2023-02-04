@@ -2,6 +2,7 @@
 """
 
 import dataclasses
+import typing
 
 
 class Address_:
@@ -18,12 +19,25 @@ class Address_:
     @classmethod
     def check_address_fields(cls, fields: Fields):
         for k, v in vars(fields).items():
+            if v is None:
+                continue
+
             xtype = cls.Fields.__annotations__[k]
-            if v is not None and not isinstance(v, xtype):
+
+            if (
+                (
+                    isinstance(xtype, type)
+                    and not isinstance(v, xtype)
+                )
+                or (
+                    isinstance(xtype, typing._BaseGenericAlias)
+                    and not isinstance(v, xtype.__origin__)
+                )
+            ):
                 raise TypeError(
                     f"parameter {k} must be {xtype}, not {type(v)}"
                 )
-
+                
     @classmethod
     def concatenate(cls, fields: Fields) -> str:
         """

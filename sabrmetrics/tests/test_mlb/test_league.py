@@ -9,12 +9,16 @@ import requests
 from sabrmetrics.mlb import league
 
 
-def test_base_address():
+class TestAddress:
     """
-    Unit test for :py:data:`league.BASE_ADDRESS`
+    Unit tests for :py:class:`league.Address`.
     """
-    with urllib.request.urlopen(league.BASE_ADDRESS) as response:
-        assert response.code == 200
+    def test_default(self):
+        """
+        Unit test for :py:meth:`league.Address.default`.
+        """
+        with urllib.request.urlopen(league.Address.default()) as response:
+            assert response.code == 200
 
 
 @pytest.mark.parametrize(

@@ -4,28 +4,63 @@ API wrapper for MLB `league data`_.
 .. _league data: https://statsapi.mlb.com/api/v1/league
 """
 
+import dataclasses
 import datetime
 
 import requests
 
 
-BASE_ADDRESS = "https://statsapi.mlb.com/api/v1/league"
-
 CURRENT_YEAR = datetime.datetime.today().year
 
 
-def concatenate_url(league_id: int = None, season: int = None):
-    address = BASE_ADDRESS
+class Address:
+    """
+    .. py:attribute:: base
+        :type: str
+    """
+    base = "https://statsapi.mlb.com/api/v1/league"
 
-    if league_id is not None and isinstance(league_id, int):
-        address += f"/{league_id}"
+    @dataclasses.dataclass
+    class Fields:
+        """
+        :param league_id:
+        :param season:
+        """
+        league_id: int = None
+        season: int = CURRENT_YEAR
 
-    address += "?"
+    @classmethod
+    def concatenate(cls, fields: Fields) -> str:
+        """
+        :param league_id:
+        :param season:
+        :return:
+        """
+        for k, v in vars(fields).items():
+            xtype = cls.Fields.__annotations__[k]
+            if v is not None and not isinstance(v, xtype):
+                raise TypeError(
+                    f"parameter {k} must be {xtype}, not {type(v)}"
+                )
 
-    if season is not None and isinstance(season, int):
-        address += f"season={season}"
+        address = cls.base
 
-    return address
+        if fields.league_id is not None:
+            address += f"/{fields.league_id}"
+
+        address += "?"
+
+        if fields.season is not None:
+            address += f"season={fields.season}"
+
+        return address
+
+    @classmethod
+    def default(cls) -> str:
+        """
+        :return:
+        """
+        return cls.concatenate(cls.Fields())
 
 
 class League:
@@ -36,7 +71,9 @@ class League:
     def __init__(self, league_id: int, season: int):
         self._league_id, self._season = int(league_id), int(season)
 
-        self._address = concatenate_url(self.league_id, self.season)
+        self._address = Address.concatenate(
+            Address.Fields(self.league_id, self.season)
+        )
         self._response = requests.get(self.address)
         self._data = self.response.json()
 
@@ -45,7 +82,9 @@ class League:
         """
         :param season:
         """
-        address = concatenate_url(season=season)
+        address = Address.concatenate(
+            Address.Fields(season=season)
+        )
 
         with requests.get(address) as response:
             return response.json()

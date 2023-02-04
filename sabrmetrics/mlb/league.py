@@ -9,15 +9,13 @@ import datetime
 
 import requests
 
+from .address import Address_
+
 
 CURRENT_YEAR = datetime.datetime.today().year
 
 
-class Address:
-    """
-    .. py:attribute:: base
-        :type: str
-    """
+class Address(Address_):
     base = "https://statsapi.mlb.com/api/v1/league"
 
     @dataclasses.dataclass
@@ -31,17 +29,7 @@ class Address:
 
     @classmethod
     def concatenate(cls, fields: Fields) -> str:
-        """
-        :param league_id:
-        :param season:
-        :return:
-        """
-        for k, v in vars(fields).items():
-            xtype = cls.Fields.__annotations__[k]
-            if v is not None and not isinstance(v, xtype):
-                raise TypeError(
-                    f"parameter {k} must be {xtype}, not {type(v)}"
-                )
+        cls.check_address_fields(fields)
 
         address = cls.base
 
@@ -54,13 +42,6 @@ class Address:
             address += f"season={fields.season}"
 
         return address
-
-    @classmethod
-    def default(cls) -> str:
-        """
-        :return:
-        """
-        return cls.concatenate(cls.Fields())
 
 
 class League:

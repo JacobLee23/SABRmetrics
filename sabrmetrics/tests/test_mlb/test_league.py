@@ -69,6 +69,7 @@ class TestLeague:
         assert all(isinstance(k, str) for k in x.data["leagues"][0])
 
         assert x.data["leagues"][0]["id"] == x.league_id
+        assert int(x.data["leagues"][0]["season"]) == x.season
         assert x.data["leagues"][0]["link"] in x.address
         assert x.data["leagues"][0]["active"]
 

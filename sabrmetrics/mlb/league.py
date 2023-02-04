@@ -41,20 +41,6 @@ class League:
         self._data = self.response.json()
 
     @property
-    def league_id(self) -> int:
-        """
-        :return:
-        """
-        return self._league_id
-
-    @property
-    def season(self) -> int:
-        """
-        :return:
-        """
-        return self._season
-
-    @property
     def address(self) -> str:
         """
         :return:
@@ -74,6 +60,20 @@ class League:
         :return:
         """
         return self._data
+
+    @property
+    def league_id(self) -> int:
+        """
+        :return:
+        """
+        return self._league_id
+
+    @property
+    def season(self) -> int:
+        """
+        :return:
+        """
+        return self._season
 
 
 class AmericanLeague(League):

@@ -6,7 +6,6 @@ API wrapper for MLB `league data`_.
 
 import dataclasses
 import datetime
-import typing
 
 import requests
 

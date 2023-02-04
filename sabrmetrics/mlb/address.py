@@ -2,7 +2,6 @@
 """
 
 import dataclasses
-import typing
 
 
 class Address_:

@@ -1,23 +1,31 @@
 """
 """
 
-import dataclasses
 import typing
 
 
 class Address_:
     """
-    .. py:attribute:: base
-        :type: str
     """
     base: str
 
-    @dataclasses.dataclass
-    class Fields:
+    class _FieldDefaults(typing.NamedTuple):
         pass
 
+    def __init__(self, **kwargs: typing.Any):
+        fields = self.field_defaults()
+        for key, value in kwargs.items():
+            if key in fields:
+                fields[key] = value
+        self._fields = fields
+
+        self.check_fields()
+
+    def __getitem__(self, key: str) -> str:
+        return self.fields[key]
+
     @staticmethod
-    def validate_value_type(
+    def check_value_type(
         value: typing.Any, xtype: typing.Union[type, typing._BaseGenericAlias]
     ) -> bool:
         """
@@ -35,39 +43,45 @@ class Address_:
 
         return False
 
+    @classmethod
+    def field_types(cls) -> typing.Dict[str, typing.Union[type, typing._BaseGenericAlias]]:
+        """
+        :return:
+        """
+        return {k: cls._FieldDefaults.__annotations__[k] for k in cls._FieldDefaults._fields}
 
     @classmethod
-    def check_address_fields(cls, fields: Fields):
+    def field_defaults(cls) -> typing.Dict[str, typing.Any]:
         """
-        :param fields:
+        :return:
+        """
+        return cls._FieldDefaults._field_defaults
+
+    @property
+    def fields(self) -> typing.Dict[str, str]:
+        """
+        :return:
+        """
+        return self._fields
+
+    def check_fields(self):
+        """
         :raise TypeError:
         """
-        for k, v in vars(fields).items():
-            if v is None:
+        field_types = self.field_types()
+
+        for key, value in self.fields.items():
+            if value is None:
                 continue
 
-            # Get arguments of `cls.Fields` and corresponding type annotations
-            xtype = cls.Fields.__annotations__[k]
-
-            if not cls.validate_value_type(v, xtype):
+            xtype = field_types[key]
+            if not self.check_value_type(value, xtype):
                 raise TypeError(
-                    f"parameter {k} must be {xtype}, not {type(v)}"
+                    f"parameter {key} must be {xtype}, not {type(value)}"
                 )
-            
-                
-    @classmethod
-    def concatenate(cls, fields: Fields) -> str:
+
+    def concatenate(self) -> str:
         """
-        :param fields:
         :return:
         """
-        cls.check_address_fields(fields)
-
         raise NotImplementedError
-
-    @classmethod
-    def defaults(cls) -> Fields:
-        """
-        :return:
-        """
-        return cls.Fields()

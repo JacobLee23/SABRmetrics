@@ -1,107 +1,61 @@
 """
 """
 
-import dataclasses
 import datetime
 import typing
 
 import requests
 
 from .address import Address_
+from .scraper import APIScraper
 from sabrmetrics import TODAY
 
 
 class Address(Address_):
+    """
+    """
     base = "https://statsapi.mlb.com/api/v1/league"
 
-    @dataclasses.dataclass
-    class Fields:
+    class _FieldDefaults(typing.NamedTuple):
         """
-        :param league_id:
-        :param season:
         """
         league_id: int = None
         season: int = TODAY.year
 
-    @classmethod
-    def concatenate(cls, fields: Fields) -> str:
-        """
-        :param fields:
-        :return:
-        """
-        cls.check_address_fields(fields)
-
-        filepath = []
-        if fields.league_id is not None:
-            filepath.append(str(fields.league_id))
+    def concatenate(self) -> str:
+        fpath = []
+        if self["league_id"] is not None:
+            fpath.append(str(self["league_id"]))
 
         queries = {}
-        if fields.season is not None:
-            queries.setdefault("season", str(fields.season))
+        if self["season"] is not None:
+            queries.setdefault("season", str(self["season"]))
 
-        return f"{cls.base}{'/'.join(filepath)}?{'&'.join(f'='.join(x) for x in queries.items())}"
+        return f"{self.base}/{'/'.join(fpath)}?{'&'.join(f'{k}={v}' for k, v in queries.items())}"
 
 
-class League:
+class League(APIScraper):
     """
     :param league_id:
     :param season:
     """
     def __init__(self, league_id: int, season: int):
-        self._league_id, self._season = int(league_id), int(season)
-
-        self._address = Address.concatenate(
-            Address.Fields(self.league_id, self.season)
-        )
-        self._response = requests.get(self.address)
-        self._data = self.response.json()
+        kwargs = {}
+        kwargs.setdefault("league_id", int(league_id))
+        kwargs.setdefault("season", int(season))
+        
+        super().__init__(Address(**kwargs))
 
     @classmethod
     def all_data(cls, season: int) -> dict:
         """
         :param season:
         """
-        address = Address.concatenate(
-            Address.Fields(season=season)
-        )
+        address = Address(season=season)
+        url = address.concatenate()
 
-        with requests.get(address) as response:
+        with requests.get(url) as response:
             return response.json()
-
-    @property
-    def address(self) -> str:
-        """
-        :return:
-        """
-        return self._address
-
-    @property
-    def response(self) -> requests.Response:
-        """
-        :return:
-        """
-        return self._response
-
-    @property
-    def data(self) -> dict:
-        """
-        :return:
-        """
-        return self._data
-
-    @property
-    def league_id(self) -> int:
-        """
-        :return:
-        """
-        return self._league_id
-
-    @property
-    def season(self) -> int:
-        """
-        :return:
-        """
-        return self._season
 
 
 class AmericanLeague(League):

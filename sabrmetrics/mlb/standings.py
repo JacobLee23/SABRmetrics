@@ -11,25 +11,20 @@ import requests
 from . import league
 from .address import Address_
 from .league import AmericanLeague, NationalLeague
+from .scraper import APIScraper
 from sabrmetrics import TODAY
 
 
 class Address(Address_):
+    """
+    """
     base = "https://statsapi.mlb.com/api/v1/standings"
 
-    @dataclasses.dataclass
-    class Fields:
+    class _FieldDefaults(typing.NamedTuple):
         """
-        :param league_id:
-        :param season:
-        :param date:
-        :param standings_types:
-        :param hydrate:
         """
-        league_id: typing.Tuple[int] = tuple(
-            lg().data["leagues"][0]["id"] for lg in [
-                AmericanLeague, NationalLeague
-            ]
+        league_id: typing.Tuple[int] = (
+            AmericanLeague().fields["league_id"], NationalLeague().fields["league_id"]
         )
         season: int = league.Season.latest().year
         date: datetime.datetime = min(TODAY, league.Season.latest()["regularSeasonEndDate"])
@@ -44,26 +39,23 @@ class Address(Address_):
             )
         )
 
-    @classmethod
-    def concatenate(cls, fields: Fields) -> str:
-        cls.check_address_fields(fields)
-
+    def concatenate(self) -> str:
         queries = {}
-        if fields.league_id:
-            queries.setdefault("leagueId", ",".join(map(str, fields.league_id)))
-        if fields.season:
-            queries.setdefault("season", str(fields.season))
-        if fields.date:
-            queries.setdefault("date", fields.date.strftime("%Y-%m-%d"))
-        if fields.standings_types:
-            queries.setdefault("standingsTypes", ",".join(fields.standings_types))
-        if fields.hydrate:
-            queries.setdefault("hydrate", ",".join(fields.hydrate))
+        if self["league_id"]:
+            queries.setdefault("leagueId", ",".join(map(str, self["league_id"])))
+        if self["season"]:
+            queries.setdefault("season", str(self["season"]))
+        if self["date"]:
+            queries.setdefault("date", self["date"].strftime("%Y-%m-%d"))
+        if self["standings_types"]:
+            queries.setdefault("standingsTypes", ",".join(self["standings_types"]))
+        if self["hydrate"]:
+            queries.setdefault("hydrate", ",".join(self["hydrate"]))
 
-        return f"{cls.base}?{'&'.join(f'{k}={v}' for k, v in queries.items())}"
+        return f"{self.base}?{'&'.join(f'{k}={v}' for k, v in queries.items())}"
 
 
-class Standings:
+class Standings(APIScraper):
     """
     :param league_id:
     :param season:
@@ -75,50 +67,15 @@ class Standings:
             season: typing.Optional[int] = None,
             date: typing.Optional[datetime.datetime] = None
     ):
-        self._fields = Address.defaults()
-
+        kwargs = {}
         if league_id:
-            self._fields.league_id = tuple(map(int, league_id))
+            kwargs.setdefault("league_id", tuple(map(int, league_id)))
         if season:
-            self._fields.season = int(season)
+            kwargs.setdefault("season", int(season))
         if date:
             szn = league.Season(date.year)
             if not (szn["regularSeasonStartDate"] <= date <= szn["regularSeasonEndDate"]):
                 date = league.Season.latest(date)["regularSeasonEndDate"]
-            self._fields.date = date
+            kwargs.setdefault("date", date)
 
-        self._address = Address.concatenate(self.fields)
-
-        self._response = requests.get(self.address)
-        self._data = self.response.json()
-
-    @property
-    def address(self) -> str:
-        """
-
-        :return:
-        """
-        return self._address
-
-    @property
-    def response(self) -> requests.Response:
-        """
-
-        :return:
-        """
-        return self._response
-
-    @property
-    def data(self) -> dict:
-        """
-
-        :return:
-        """
-        return self._data
-
-    @property
-    def fields(self) -> Address.Fields:
-        """
-        :return:
-        """
-        return self._fields
+        super().__init__(Address(**kwargs))

@@ -14,26 +14,32 @@ class Scraper:
     :param address:
     :param fields:
     """
-    def __init__(self, address: typing.Type[Address_], fields: Address_.Fields):
-        self._fields = fields
-        self._address = address.concatenate(fields)
-        self._response = requests.get(self.address)
-        self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
-        self._data = self.response.json()
+    def __init__(self, address: Address_):
+        self._address = address
+        self._fields = self.address.fields
+        self._url = self.address.concatenate()
+        self._response = requests.get(self.url)
 
     @property
-    def fields(self) -> Address_.Fields:
+    def address(self) -> Address_:
+        """
+        :return:
+        """
+        return self._address
+
+    @property
+    def fields(self) -> typing.Dict[str, str]:
         """
         :return:
         """
         return self._fields
 
     @property
-    def address(self) -> str:
+    def url(self) -> str:
         """
         :return:
         """
-        return self._address
+        return self._url
 
     @property
     def response(self) -> requests.Response:
@@ -46,10 +52,9 @@ class Scraper:
 class APIScraper(Scraper):
     """
     :param address:
-    :param fields:
     """
-    def __init__(self, address: typing.Type[Address_], fields: Address_.Fields):
-        super().__init__(address, fields)
+    def __init__(self, address: Address_):
+        super().__init__(address)
 
         self._data = self.response.json()
 
@@ -64,10 +69,9 @@ class APIScraper(Scraper):
 class WebScraper(Scraper):
     """
     :param address:
-    :param fields:
     """
-    def __init__(self, address: typing.Type[Address_], fields: Address_.Fields):
-        super().__init__(address, fields)
+    def __init__(self, address: Address_):
+        super().__init__(address)
 
         self._soup = bs4.BeautifulSoup(self.response.text, features="lxml")
 

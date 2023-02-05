@@ -1,7 +1,4 @@
 """
-API wrapper for MLB `league data`_.
-
-.. _league data: https://statsapi.mlb.com/api/v1/league
 """
 
 import dataclasses
@@ -28,19 +25,21 @@ class Address(Address_):
 
     @classmethod
     def concatenate(cls, fields: Fields) -> str:
+        """
+        :param fields:
+        :return:
+        """
         cls.check_address_fields(fields)
 
-        address = cls.base
-
+        filepath = []
         if fields.league_id is not None:
-            address += f"/{fields.league_id}"
+            filepath.append(str(fields.league_id))
 
-        address += "?"
-
+        queries = {}
         if fields.season is not None:
-            address += f"season={fields.season}"
+            queries.setdefault("season", str(fields.season))
 
-        return address
+        return f"{cls.base}{'/'.join(filepath)}?{'&'.join(f'='.join(x) for x in queries.items())}"
 
 
 class League:

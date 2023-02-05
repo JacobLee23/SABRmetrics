@@ -60,9 +60,7 @@ class Address(Address_):
         if fields.hydrate:
             queries.setdefault("hydrate", ",".join(fields.hydrate))
 
-        address = cls.base + "?" + "&".join(f"{k}={v}" for k, v in queries.items())
-
-        return address
+        return f"{cls.base}?{'&'.join(f'{k}={v}' for k, v in queries.items())}"
 
 
 class Standings:

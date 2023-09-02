@@ -4,7 +4,6 @@
 import datetime
 import typing
 
-import requests
 
 from .address import APIAddress
 from .scraper import APIScraper
@@ -29,63 +28,37 @@ class League(APIScraper):
     :param league_id:
     :param season:
     """
-    def __init__(self, league_id: int, season: int):
-        kwargs = {}
-        kwargs.setdefault("league_id", int(league_id))
-        kwargs.setdefault("season", int(season))
-        
-        super().__init__(Address(**kwargs))
+    league_id: int
 
-    @classmethod
-    def all_data(cls, season: int) -> dict:
-        """
-        :param season:
-        """
+    def __init__(self, season: int = TODAY.year):
         address = Address(season=season)
-        url = address.concatenate()
+        address.url = Address.url.format(league_id=self.league_id)
 
-        with requests.get(url) as response:
-            return response.json()
+        super().__init__(address)
 
 
 class AmericanLeague(League):
     """
-    :param season:
     """
-    url = Address.url.format(league_id=103)
-
-    def __init__(self, season: int = TODAY.year):
-        super().__init__(season)
+    league_id = 103
 
 
 class NationalLeague(League):
     """
-    :param season:
     """
-    url = Address.url.format(league_id=104)
-
-    def __init__(self, season: int = TODAY.year):
-        super().__init__(season)
+    league_id = 104
 
 
 class CactusLeague(League):
     """
-    :param season:
     """
-    url = Address.url.format(league_id=114)
-
-    def __init__(self, season: int = TODAY.year):
-        super().__init__(season)
+    league_id = 114
 
 
 class GrapefruitLeague(League):
     """
-    :param season:
     """
-    url = Address.url.format(league_id=115)
-
-    def __init__(self, season: int = TODAY.year):
-        super().__init__(season)
+    league_id = 115
 
 
 class Season:
@@ -106,7 +79,7 @@ class Season:
 
     def __init__(self, year: int = TODAY.year, *, league: League = AmericanLeague):
         self._year = year
-        self._data = league(year)["leagues"][0]["seasonDateInfo"]
+        self._data = league(year).data["leagues"][0]["seasonDateInfo"]
 
     def __getitem__(self, key: str) -> typing.Union[int, float, str, datetime.datetime]:
         value = self.data[key]

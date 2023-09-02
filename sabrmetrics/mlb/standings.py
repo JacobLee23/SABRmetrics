@@ -16,15 +16,10 @@ class Address(APIAddress):
     """
     url = "https://statsapi.mlb.com/api/v1/standings"
     field_defaults = {
-        "league_id": (
-            AmericanLeague().fields["league_id"],
-            NationalLeague().fields["league_id"]
-        ),
+        "league_id": (AmericanLeague.league_id, NationalLeague.league_id),
         "season": Season.latest_year(),
         "date": Season.latest_date(),
-        "standings_types": (
-            "regularSeason", "springTraining", "firstHalf", "secondHalf"
-        ),
+        "standings_types": ("regularSeason", "springTraining", "firstHalf", "secondHalf"),
         "hydrate": (
             "division", "conference", "sport", "league",
             "team({next_schedule},{previous_schedule})".format(
@@ -77,9 +72,9 @@ class Standings(APIScraper):
         season: typing.Optional[int] = None,
         date: typing.Optional[datetime.datetime] = None
     ):
-        kwargs = {
-            "league_id": tuple(map(int, league_id)) if league_id else None,
-            "season": int(season) if season else None,
-            "date": Season.latest_date(date) if date else None
-        }
-        super().__init__(Address(**kwargs))
+        address = Address(
+            league_id=tuple(map(int, league_id)) if league_id else None,
+            season=int(season) if season else None,
+            date=Season.latest_date(date) if date else None
+        )
+        super().__init__(address)

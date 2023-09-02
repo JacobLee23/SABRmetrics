@@ -2,57 +2,67 @@
 
 """
 
-import dataclasses
 import datetime
 import typing
 
-import requests
-
-from . import league
-from .address import Address_
+from .address import APIAddress
 from .league import AmericanLeague, NationalLeague
+from .league import Season
 from .scraper import APIScraper
-from sabrmetrics import TODAY
 
 
-class Address(Address_):
+class Address(APIAddress):
     """
     """
-    base = "https://statsapi.mlb.com/api/v1/standings"
-
-    class _FieldDefaults(typing.NamedTuple):
-        """
-        """
-        league_id: typing.Tuple[int] = (
-            AmericanLeague().fields["league_id"], NationalLeague().fields["league_id"]
-        )
-        season: int = league.Season.latest().year
-        date: datetime.datetime = min(TODAY, league.Season.latest()["regularSeasonEndDate"])
-        standings_types: typing.Tuple[str] = (
+    url = "https://statsapi.mlb.com/api/v1/standings"
+    field_defaults = {
+        "league_id": (
+            AmericanLeague().fields["league_id"],
+            NationalLeague().fields["league_id"]
+        ),
+        "season": Season.latest_year(),
+        "date": Season.latest_date(),
+        "standings_types": (
             "regularSeason", "springTraining", "firstHalf", "secondHalf"
-        )
-        hydrate: typing.Tuple[str] = (
+        ),
+        "hydrate": (
             "division", "conference", "sport", "league",
             "team({next_schedule},{previous_schedule})".format(
                 next_schedule="nextSchedule(team,gameType=[R,F,D,L,W,C],inclusive=false)",
                 previous_schedule="previousSchedule(team,gameType=[R,F,D,L,W,C],inclusive=true)"
             )
         )
+    }
 
-    def concatenate(self) -> str:
-        queries = {}
-        if self["league_id"]:
-            queries.setdefault("leagueId", ",".join(map(str, self["league_id"])))
-        if self["season"]:
-            queries.setdefault("season", str(self["season"]))
-        if self["date"]:
-            queries.setdefault("date", self["date"].strftime("%Y-%m-%d"))
-        if self["standings_types"]:
-            queries.setdefault("standingsTypes", ",".join(self["standings_types"]))
-        if self["hydrate"]:
-            queries.setdefault("hydrate", ",".join(self["hydrate"]))
-
-        return f"{self.base}?{'&'.join(f'{k}={v}' for k, v in queries.items())}"
+    @property
+    def league_id(self) -> str:
+        """
+        """
+        return ",".join(map(str, self.fields["leagueId"]))
+    
+    @property
+    def season(self) -> str:
+        """
+        """
+        return str(self.fields["season"])
+    
+    @property
+    def date(self) -> str:
+        """
+        """
+        return self.fields["date"].strftime("%Y-%m-%d")
+    
+    @property
+    def standings_types(self) -> str:
+        """
+        """
+        return ",".join(self.fields["standings_types"])
+    
+    @property
+    def hydrate(self) -> str:
+        """
+        """
+        return ",".join(self.fields["hydrate"])
 
 
 class Standings(APIScraper):
@@ -62,20 +72,14 @@ class Standings(APIScraper):
     :param date:
     """
     def __init__(
-            self, *,
-            league_id: typing.Optional[typing.Sequence[int]] = None,
-            season: typing.Optional[int] = None,
-            date: typing.Optional[datetime.datetime] = None
+        self, *,
+        league_id: typing.Optional[typing.Sequence[int]] = None,
+        season: typing.Optional[int] = None,
+        date: typing.Optional[datetime.datetime] = None
     ):
-        kwargs = {}
-        if league_id:
-            kwargs.setdefault("league_id", tuple(map(int, league_id)))
-        if season:
-            kwargs.setdefault("season", int(season))
-        if date:
-            szn = league.Season(date.year)
-            if not (szn["regularSeasonStartDate"] <= date <= szn["regularSeasonEndDate"]):
-                date = league.Season.latest(date)["regularSeasonEndDate"]
-            kwargs.setdefault("date", date)
-
+        kwargs = {
+            "league_id": tuple(map(int, league_id)) if league_id else None,
+            "season": int(season) if season else None,
+            "date": Season.latest_date(date) if date else None
+        }
         super().__init__(Address(**kwargs))

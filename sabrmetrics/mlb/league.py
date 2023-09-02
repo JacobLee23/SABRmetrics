@@ -17,6 +17,12 @@ class Address(APIAddress):
     field_defaults = {"season": TODAY.year}
 
     @property
+    def parameters(self) -> typing.Dict[str, str]:
+        """
+        """
+        return {"season": self.season}
+
+    @property
     def season(self) -> str:
         """
         """
@@ -79,7 +85,7 @@ class Season:
 
     def __init__(self, year: int = TODAY.year, *, league: League = AmericanLeague):
         self._year = year
-        self._data = league(year).data["leagues"][0]["seasonDateInfo"]
+        self._data = league(year)["leagues"][0]["seasonDateInfo"]
 
     def __getitem__(self, key: str) -> typing.Union[int, float, str, datetime.datetime]:
         value = self.data[key]

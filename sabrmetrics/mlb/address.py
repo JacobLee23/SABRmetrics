@@ -19,7 +19,7 @@ class APIAddress:
             )
 
     def __repr__(self) -> str:
-        arguments = ", ".join(f"{k}={v}" for k, v in self.parameters.items())
+        arguments = ", ".join(f"{k}={self.__getattribute__(k)}" for k in self.fields)
         return f"{type(self).__name__}({arguments})"
 
     @property
@@ -32,4 +32,4 @@ class APIAddress:
     def parameters(self) -> typing.Dict[str, str]:
         """
         """
-        return {k: self.__getattribute__(k) for k in self.fields}
+        raise NotImplementedError

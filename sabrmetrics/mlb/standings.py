@@ -30,10 +30,19 @@ class Address(APIAddress):
     }
 
     @property
+    def parameters(self) -> typing.Dict[str, str]:
+        """
+        """
+        return {
+            "leagueId": self.league_id, "season": self.season, "date": self.date,
+            "standingsTypes": self.standings_types
+        }
+
+    @property
     def league_id(self) -> str:
         """
         """
-        return ",".join(map(str, self.fields["leagueId"]))
+        return ",".join(map(str, self.fields["league_id"]))
     
     @property
     def season(self) -> str:

@@ -27,14 +27,12 @@ class Scraper:
     @property
     def address(self) -> APIAddress:
         """
-        :return:
         """
         return self._address
 
     @property
     def response(self) -> requests.Response:
         """
-        :return:
         """
         return self._response
 
@@ -47,6 +45,9 @@ class APIScraper(Scraper):
         super().__init__(address)
 
         self._data = self.response.json()
+
+    def __getitem__(self, key: str) -> typing.Any:
+        return self.data[key]
 
     @property
     def data(self) -> dict:

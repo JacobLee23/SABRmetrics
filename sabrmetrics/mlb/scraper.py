@@ -21,6 +21,9 @@ class Scraper:
             self.address.url, params=self.address.parameters, timeout=100
         )
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(address={self.address})"
+
     @property
     def address(self) -> APIAddress:
         """

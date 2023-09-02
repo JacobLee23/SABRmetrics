@@ -18,6 +18,10 @@ class APIAddress:
                 kwargs[key] if key in filter(lambda x: kwargs[x] is not None, kwargs) else value
             )
 
+    def __repr__(self) -> str:
+        arguments = ", ".join(f"{k}={v}" for k, v in self.parameters.items())
+        return f"{type(self).__name__}({arguments})"
+
     @property
     def fields(self) -> typing.Dict[str, typing.Any]:
         """

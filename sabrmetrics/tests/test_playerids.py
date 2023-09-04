@@ -13,7 +13,7 @@ from sabrmetrics import playerids
 @pytest.mark.parametrize(
     "flavor", [
         x() for x in [
-            playerids._SmartFantasyBaseball,
+            playerids.SmartFantasyBaseball,
         ]
     ]
 )

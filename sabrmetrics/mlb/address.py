@@ -32,4 +32,4 @@ class APIAddress:
     def parameters(self) -> typing.Dict[str, str]:
         """
         """
-        raise NotImplementedError
+        return {}

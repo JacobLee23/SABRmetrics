@@ -1,5 +1,5 @@
 """
 """
 
-from . import league
-from . import standings
+from .leagues import League
+from .standings import Standings

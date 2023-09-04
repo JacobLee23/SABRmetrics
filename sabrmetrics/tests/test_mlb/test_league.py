@@ -7,29 +7,29 @@ import urllib.request
 import pytest
 import requests
 
-from sabrmetrics.mlb import league
+from sabrmetrics.mlb import leagues
 from sabrmetrics.mlb.address import APIAddress
 
 
 @pytest.mark.parametrize(
     "x", [
-        league.AmericanLeague(), league.NationalLeague(),
-        league.CactusLeague(), league.GrapefruitLeague()
+        leagues.AmericanLeague(), leagues.NationalLeague(),
+        leagues.CactusLeague(), leagues.GrapefruitLeague()
     ]
 )
 class TestLeague:
     """
     Unit tests for :py:class:`league.League`.
     """
-    def test_data(self, x: league.League):
+    def test_data(self, x: leagues.League):
         """
         Unit test for :py:attr:`league.League.data`.
         """
         mlb_leagues = {
-            league.AmericanLeague: ("American League", "AL"),
-            league.NationalLeague: ("National League", "NL"),
-            league.CactusLeague: ("Cactus League", "CL"),
-            league.GrapefruitLeague: ("Grapefruit League", "GL")
+            leagues.AmericanLeague: ("American League", "AL"),
+            leagues.NationalLeague: ("National League", "NL"),
+            leagues.CactusLeague: ("Cactus League", "CL"),
+            leagues.GrapefruitLeague: ("Grapefruit League", "GL")
         }
         assert isinstance(x, tuple(mlb_leagues))
 

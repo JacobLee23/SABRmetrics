@@ -5,6 +5,7 @@ import datetime
 import typing
 
 
+from . import divisions
 from .address import APIAddress
 from .scraper import APIScraper
 from sabrmetrics import TODAY
@@ -31,10 +32,10 @@ class Address(APIAddress):
 
 class League(APIScraper):
     """
-    :param league_id:
     :param season:
     """
     league_id: int
+    divisions: typing.List[typing.Type[divisions.Division]]
 
     def __init__(self, season: int = TODAY.year):
         address = Address(season=season)
@@ -47,12 +48,14 @@ class AmericanLeague(League):
     """
     """
     league_id = 103
+    divisions = [divisions.ALWest, divisions.ALEast, divisions.ALCentral]
 
 
 class NationalLeague(League):
     """
     """
     league_id = 104
+    divisions = [divisions.NLWest, divisions.NLEast, divisions.NLCentral]
 
 
 class CactusLeague(League):

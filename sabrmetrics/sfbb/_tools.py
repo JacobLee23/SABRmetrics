@@ -8,6 +8,7 @@ import typing
 
 import bs4
 import dateutil.parser
+import numpy as np
 import pandas as pd
 import requests
 
@@ -144,7 +145,6 @@ class PlayerIDMap:
             "changelog_csv_download": hyperlinks[4]
         }
     
-    @property
     def playeridmap(self) -> pd.DataFrame:
         """
         The content of the Player ID Map table.
@@ -170,13 +170,12 @@ class PlayerIDMap:
         df.loc[:, "Birthdate"] = df.loc[:, "Birthdate"].apply(dateutil.parser.parse)
         df.loc[:, "AllPositions"] = df.loc[:, "AllPositions"].apply(lambda x: x.split("/"))
         df.loc[:, "Active"] = df.loc[:, "Active"].apply(lambda x: x == "Y")
-        df.loc[:, integer_columns] = df.loc[:, integer_columns].apply(
-            lambda s: s.apply(lambda x: pd.NA if math.isnan(x) else int(x))
+        df.loc[:, integer_columns] = df.loc[:, integer_columns].applymap(
+            lambda x: int(x) if isinstance(x, str) else pd.NA
         )
 
         return df
     
-    @property
     def changelog(self) -> pd.DataFrame:
         """
         The contents of the Player ID Map CHANGELOG table.

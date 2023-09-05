@@ -1,7 +1,7 @@
 """
-Scraper for the `Smart Fantasy Baseball`_ website.
+Web scraper for the `Smart Fantasy Baseball`_ website.
 
 .. _Smart Fantasy Baseball: https://smartfantasybaseball.com/
 """
 
-from . import tools
+from ._tools import PlayerIDMap

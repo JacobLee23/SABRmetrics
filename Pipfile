@@ -12,7 +12,6 @@ python-dateutil = "*"
 numpy = "*"
 
 [dev-packages]
-pytest = "*"
 sphinx = "*"
 build = "*"
 twine = "*"
@@ -24,7 +23,5 @@ pylint = "*"
 python_version = "3.10"
 
 [scripts]
-pylint = "pylint sabrmetrics/ --ignore-paths=sabrmetrics/tests/*"
-pytest = "pytest -vvv sabrmetrics/tests/"
-pytest-html = "pytest -vvv sabrmetrics/tests/ --html=\"report.html\" --self-contained-html"
+pylint = "pylint sabrmetrics/"
 vermin = "vermin -vvv sabrmetrics/"
